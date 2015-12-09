@@ -1,5 +1,5 @@
 # Point cloud tools for Matlab
-http://www.geo.tuwien.ac.at/downloads/pg/pctools/pctools.html
+Documentation: http://www.geo.tuwien.ac.at/downloads/pg/pctools/pctools.html
 
 Currently included are:
 
