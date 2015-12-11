@@ -78,7 +78,7 @@ function plot(obj, varargin)
 % Input parsing ----------------------------------------------------------------
 
 p = inputParser;
-p.addParamValue('Color'            , ''      , @ischar);
+p.addParamValue('Color'            , ''      );
 p.addParamValue('MarkerSize'       , 1       , @(x) isscalar(x) && x>0);
 p.addParamValue('MaxPoi'           , 10^6    , @(x) isscalar(x) && x>0);
 p.addParamValue('Attribute'        , 'z'     , @ischar);
