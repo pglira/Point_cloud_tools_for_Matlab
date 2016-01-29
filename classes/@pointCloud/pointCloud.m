@@ -71,27 +71,25 @@ classdef pointCloud < KDTreeSearcher
         %       (e.g. for two points with one attribute the ordering would be
         %       x1, y1, z1, a1, x2, y2, z2, a2).
         %     3 LAS/LAZ FILE
-        %       For reading las or laz files the function 'las2mat' must be 
-        %       accessible on the path. Next to the point coordinates, all 
-        %       non-empty attributes are imported from the file.
-        %     4 PLY FILE
-        %       Polygon file format, either in ascii or binary format. Next to
-        %       the point coordinates, all non-empty attributes are imported
-        %       from the file.
-        %     5 MAT FILE
-        %       This method can also be used to load a mat file generated with
-        %       the 'save' method of this class. For more details run
-        %       'help pointCloud.save'.
-        %     6 ODM FILE
+        %       For reading las or laz files the function 'las2mat' must be
+        %       accessible on the path.
+        %     4 ODM FILE
         %       Files created with OPALS (http://geo.tuwien.ac.at/opals). For
         %       this it is necessary to:
         %       1) Install OPALS
-        %       2) Copy the following files into the folder %opals_root%\opals:
+        %       2) Copy these files into the folder '%opals_root%\opals':
         %          - odmGetPoints.mexw64
         %          - odmGetPointsFull.mexw64
         %          - odmGetStatistics.mexw64
         %          You can find these files in 'files2readODM.zip'
         %          (see folder 'classes\4pointCloud').
+        %       3) Add '%opals_root%\opals' to the search path in Matlab.
+        %     5 PLY FILE
+        %       Polygon file format, either in ascii or binary format.
+        %     6 MAT FILE
+        %       This method can also be used to load a mat file generated with
+        %       the 'save' method of this class. For more details run
+        %       'help pointCloud.save'.
         %   b MATRIX CONTAINING POINT CLOUD DATA
         %     A matrix of size n-by-3+a. Each row corresponds to one point, i.e.
         %     n is the total number of points. The first 3 columns contain the
@@ -113,7 +111,13 @@ classdef pointCloud < KDTreeSearcher
         %     * 'roughness' = roughness in point neighborhood
         %   Imported attributes are saved into the property A of the pointCloud
         %   object, i.e. obj.A.
-        %   (This parameter is not considered for las and ply files.)
+        %   Additionally, for LAS/LAZ, ODM and PLY files the following applies:
+        %   - If the parameter 'Attributes' is not defined by the user, all 
+        %     non-empty attributes are imported.
+        %   - If the name of one or more attribute is specified by the parameter
+        %     'Attributes', only these are imported.
+        %   - If the parameter 'Attributes' is set to an empty cell, i.e. {}, NO
+        %     attributes are imported.
         %
         % 3 ['Label', label]
         %   Label of point cloud defined as a string. If no label is defined and
@@ -159,7 +163,7 @@ classdef pointCloud < KDTreeSearcher
 
         p = inputParser;
         p.addRequired(  'pcData'                , @(x) ischar(x) || ismatrix(x));
-        p.addParamValue('Attributes' , []       , @iscell);
+        p.addParamValue('Attributes' , []       , @iscell); % note: if Attributes is [], all attributes are imported for some file types (e.g. LAS/LAZ or ODM)
         p.addParamValue('Label'      , 'noLabel', @(x) ischar(x) || isempty(x));
         p.addParamValue('RedPoi'     , [0 0 0]  , @(x) numel(x)==3);
         p.addParamValue('BucketSize' , 1000     , @isnumeric);
@@ -270,10 +274,21 @@ classdef pointCloud < KDTreeSearcher
                     end
                     
                     % Import attributes
-                    p.Attributes = fieldnames(data);
-                    att = zeros(size(XNonRed,1), numel(p.Attributes)); % preallocate matrix
-                    for a = 1:numel(p.Attributes)
-                        att(:,a) = data.(p.Attributes{a});
+                    if isempty(p.Attributes) % then it is either [] or {}
+                    
+                        if ~iscell(p.Attributes) % then it must be [], i.e. import all attributes
+                            p.Attributes = fieldnames(data);
+                        end
+                        
+                    end
+                    
+                    if ~isempty(p.Attributes) % if any attributes should be imported
+                    
+                        att = zeros(size(XNonRed,1), numel(p.Attributes)); % preallocate matrix
+                        for a = 1:numel(p.Attributes)
+                            att(:,a) = data.(p.Attributes{a});
+                        end
+                        
                     end
                     
                 else
@@ -282,6 +297,33 @@ classdef pointCloud < KDTreeSearcher
                     
                 end
                 
+            % If input is a odm file
+            elseif strcmpi(ext, '.odm')
+                
+                % Get points and ALL attributes
+                if isempty(p.Attributes) && ~iscell(p.Attributes)
+                    
+                    [data, info] = odmGetPointsFull(p.pcData);
+                    p.Attributes = {info{5:end,1}};
+                    
+                % Get ONLY points
+                elseif isempty(p.Attributes) && iscell(p.Attributes)
+                    
+                    data = odmGetPoints(p.pcData, {'x' 'y' 'z'});
+                   
+                % Get points and selected attributes
+                else
+                    
+                    data = odmGetPoints(p.pcData, {'x' 'y' 'z' p.Attributes{:}});
+                    
+                end
+                
+                % Point coordinates
+                XNonRed = data(:,1:3);
+                
+                % Attributes
+                att = data(:,4:end);
+            
             % If input is a ply file
             elseif strcmpi(ext, '.ply')
                 
@@ -293,36 +335,20 @@ classdef pointCloud < KDTreeSearcher
                 data.vertex = rmfield(data.vertex, {'x' 'y' 'z'});
                 
                 % Import attributes
-                p.Attributes = fieldnames(data.vertex);
-                att = zeros(size(XNonRed,1), numel(p.Attributes)); % preallocate matrix
-                for a = 1:numel(p.Attributes)
-                    att(:,a) = data.vertex.(p.Attributes{a});
+                if isempty(p.Attributes) % then it is either [] or {}
+                    
+                    if ~iscell(p.Attributes) % then it must be [], i.e. import all attributes
+                        p.Attributes = fieldnames(data.vertex);
+                    end
+                    
                 end
                 
-            % If input is a odm file
-            elseif strcmpi(ext, '.odm')
-                
-                % Read odm file
-                [data, info] = odmGetPointsFull(p.pcData);
-                
-                attributeNames = {info{5:end,1}};
-                
-                % Point coordinates
-                XNonRed = data(:,1:3);
-                
-                % Attributes
-                if isempty(p.Attributes) % import all attributes if none are defined
+                if ~isempty(p.Attributes) % if any attributes should be imported
                     
-                    att = data(:,4:end);
-                    p.Attributes = attributeNames;
-                    
-                else % import only defined attributes
-                    
-                    idx = [];
+                    att = zeros(size(XNonRed,1), numel(p.Attributes)); % preallocate matrix
                     for a = 1:numel(p.Attributes)
-                        idx = [idx; find(strcmpi(attributeNames, p.Attributes{2}))];
+                        att(:,a) = data.vertex.(p.Attributes{a});
                     end
-                    att = data(:,3+idx);
                     
                 end
                 
