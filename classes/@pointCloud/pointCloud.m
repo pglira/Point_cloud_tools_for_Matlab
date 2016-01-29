@@ -82,6 +82,16 @@ classdef pointCloud < KDTreeSearcher
         %       This method can also be used to load a mat file generated with
         %       the 'save' method of this class. For more details run
         %       'help pointCloud.save'.
+        %     6 ODM FILE
+        %       Files created with OPALS (http://geo.tuwien.ac.at/opals). For
+        %       this it is necessary to:
+        %       1) Install OPALS
+        %       2) Copy the following files into the folder %opals_root%\opals:
+        %          - odmGetPoints.mexw64
+        %          - odmGetPointsFull.mexw64
+        %          - odmGetStatistics.mexw64
+        %          You can find these files in 'files2readODM.zip'
+        %          (see folder 'classes\4pointCloud').
         %   b MATRIX CONTAINING POINT CLOUD DATA
         %     A matrix of size n-by-3+a. Each row corresponds to one point, i.e.
         %     n is the total number of points. The first 3 columns contain the
@@ -287,6 +297,33 @@ classdef pointCloud < KDTreeSearcher
                 att = zeros(size(XNonRed,1), numel(p.Attributes)); % preallocate matrix
                 for a = 1:numel(p.Attributes)
                     att(:,a) = data.vertex.(p.Attributes{a});
+                end
+                
+            % If input is a odm file
+            elseif strcmpi(ext, '.odm')
+                
+                % Read odm file
+                [data, info] = odmGetPointsFull(p.pcData);
+                
+                attributeNames = {info{5:end,1}};
+                
+                % Point coordinates
+                XNonRed = data(:,1:3);
+                
+                % Attributes
+                if isempty(p.Attributes) % import all attributes if none are defined
+                    
+                    att = data(:,4:end);
+                    p.Attributes = attributeNames;
+                    
+                else % import only defined attributes
+                    
+                    idx = [];
+                    for a = 1:numel(p.Attributes)
+                        idx = [idx; find(strcmpi(attributeNames, p.Attributes{2}))];
+                    end
+                    att = data(:,3+idx);
+                    
                 end
                 
             % If input is a plain text file
