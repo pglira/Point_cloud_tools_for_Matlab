@@ -1,18 +1,21 @@
-function [obj, idxCst] = addCst(obj, varargin)
+function [obj, idxCst] = addCst(obj, cst2add)
+% ADDCST Add constant(s) to problem
 
-% Input parsing ----------------------------------------------------------------
+noCst2add = numel(cst2add); % no. of constants to add
 
-p = inputParser;
-p.addParamValue('v', NaN, @(x) size(x,2)==1);
-p.parse(varargin{:});
-p = p.Results;
+% Add constants with 'direct indexing' (faster than other methods)
+% Indices
+if isempty(obj.cst)
+    idxCst2add = 1:noCst2add;
+else
+    noCst = numel(obj.cst); % actual no. of constants
+    idxCst2add = noCst+1:noCst+noCst2add;
+end
 
-% Add constant(s) to problem ---------------------------------------------------
+% Add
+obj.cst(idxCst2add,1) = cst2add;
 
-cst2add = table(p.v, 'VariableNames', {'v'});
-
-obj.cst = [obj.cst; cst2add];
-
-idxCst = uint32([height(obj.cst)-height(cst2add)+1 : height(obj.cst)]');
+% Indices of constants
+idxCst = uint32(idxCst2add)';
 
 end

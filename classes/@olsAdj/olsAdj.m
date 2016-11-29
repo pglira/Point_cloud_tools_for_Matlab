@@ -1,4 +1,4 @@
-classdef olsAdj
+classdef olsAdj < handle
 % OLSADJ Class for ordinary least squares adjustments.
 
     properties
@@ -25,16 +25,12 @@ classdef olsAdj
         function obj = olsAdj
     
             % Initialization of table for parameters
-            obj.prm = table(                  []  , []    , []   , logical([]), []      , []          , []          , []            , [], ...
-                            'VariableNames', {'x0', 'xhat', 'sig', 'const'    , 'idxAdj', 'lowerBound', 'upperBound', 'scale4report', 'label'});
+            % obj.prm = table(                  []  , []    , []   , logical([]), []      , []          , []          , []            , [], ...
+            %                 'VariableNames', {'x0', 'xhat', 'sig', 'const'    , 'idxAdj', 'lowerBound', 'upperBound', 'scale4report', 'label'});
                         
-            % Initialization of table for observations
-            obj.obs = table(                  [] , []    , []           , []   , []    , []       , []        , [], ...
-                            'VariableNames', {'b', 'bhat', 'sigb_priori', 'res', 'pFac', 'pFacRWA', 'allowRWA', 'idxAdj'});
-                        
-            % Initialization of table for constants
-            obj.cst = table([], 'VariableNames', {'v'});
-      
+            % Clear persistent variables (done by clearing the function itself)
+            clear addCon % clears all persistent variables in function addCon
+            
         end
     
     end

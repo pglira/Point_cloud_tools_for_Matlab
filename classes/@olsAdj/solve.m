@@ -8,7 +8,6 @@ function obj = solve(obj, varargin)
 % adjOptions.Cxx                  = ;
 % adjOptions.Condition            = ;
 % adjOptions.Rank                 = ;
-% adjOptions.ReportPrm            = ;
 % adjOptions.RWAMaxSig            = ;
 % adjOptions.RWAPoi2RemovePerIt   = ;
 % adjOptions.RWASlant             = ;
@@ -18,21 +17,19 @@ function obj = solve(obj, varargin)
 % Input parsing ----------------------------------------------------------------
 
 p = inputParser;
-p.addParamValue('MaxIt'               , 10   , @(x) isscalar(x) && x > 0);
-p.addParamValue('Sig0_priori'         , 1    , @(x) isscalar(x) && x > 0);
-p.addParamValue('MaxTolLin'           , 1e-8 , @(x) isscalar(x) && x > 0); % d in Lother 2007, Ausgleichsrechnung (page 7-9)
-p.addParamValue('MaxEpsKraus'         , 1e-5 , @(x) isscalar(x) && x > 0); % eps in Kraus 1996, Photogrammetrie Band 2 (page 80)
-p.addParamValue('RobustWeightAdaption', true , @islogical);
-p.addParamValue('Cxx'                 , false, @islogical);
-p.addParamValue('Condition'           , false, @islogical);
-p.addParamValue('Rank'                , false, @islogical);
-p.addParamValue('ReportPrm'           , true , @islogical);
-% Undocumented
-p.addParamValue('RWAMaxSig'           , 3   , @(x) isscalar(x) && x > 0);
-p.addParamValue('RWAPoi2RemovePerIt'  , 10  , @(x) isscalar(x) && x > 0);
-p.addParamValue('RWASlant'            , 2   , @(x) isscalar(x) && x > 0);
-p.addParamValue('RWApFacOfGrossErrors', 0.01, @(x) isscalar(x) && x >= 0 && x < 1);
-p.addParamValue('RWAMaxIt'            , 10  , @(x) isscalar(x) && x > 1);
+p.addParameter('MaxIt'               , 10   , @(x) isscalar(x) && x > 0);
+p.addParameter('Sig0_priori'         , 1    , @(x) isscalar(x) && x > 0);
+p.addParameter('MaxTolLin'           , 1e-8 , @(x) isscalar(x) && x > 0); % d in Lother 2007, Ausgleichsrechnung (page 7-9)
+p.addParameter('MaxEpsKraus'         , 1e-5 , @(x) isscalar(x) && x > 0); % eps in Kraus 1996, Photogrammetrie Band 2 (page 80)
+p.addParameter('RobustWeightAdaption', true , @islogical);
+p.addParameter('Cxx'                 , false, @islogical);
+p.addParameter('Condition'           , false, @islogical);
+p.addParameter('Rank'                , false, @islogical);
+p.addParameter('RWAMaxSig'           , 3    , @(x) isscalar(x) && x > 0);
+p.addParameter('RWAPoi2RemovePerIt'  , 10   , @(x) isscalar(x) && x > 0);
+p.addParameter('RWASlant'            , 2    , @(x) isscalar(x) && x > 0);
+p.addParameter('RWApFacOfGrossErrors', 0.01 , @(x) isscalar(x) && x >= 0 && x < 1);
+p.addParameter('RWAMaxIt'            , 10   , @(x) isscalar(x) && x > 1);
 
 p.parse(varargin{:});
 p = p.Results;
@@ -64,6 +61,9 @@ pFacRWA = ones(size(pFac,1), 1);
 
 % allowRWA for RWA of observations as vector
 allowRWA = obj.obs.allowRWA(~isnan(obj.obs.idxAdj) & obj.obs.sigb_priori > 0);
+
+% idxCat of observations as vector
+idxCat = obj.obs.idxCat(~isnan(obj.obs.idxAdj) & obj.obs.sigb_priori > 0);
 
 % Indices of constraints
 idxCsr = obj.obs.sigb_priori == 0;
@@ -113,11 +113,14 @@ while ~endOfAdj
     % For each condition
     for nActCon = 1:numel(con) % number of actual condition
     
+        % fprintf(1, 'condition %d of %d\n', nActCon, numel(con));
+        
         % Get parameter, constants and observations as structure as input for the condition
-        [prm, cst, obs] = obj.getPrmCstObs(nActCon, nIt);
-
+        % [prm, cst, obs] = obj.getPrmCstObs(nActCon, nIt);
+        [prm, cst, obs] = getPrmCstObs(con{nActCon}, obj.prm, obj.cst, obj.obs, nIt);
+        
         % Get function handles from condition function
-        [bFun, b0Fun, derFun] = con(nActCon).fun(prm, cst, obs);
+        [bFun, b0Fun, derFun] = con{nActCon}.fun(prm, cst, obs);
 
         % Prepare b ------------------------------------------------------------
         
@@ -138,10 +141,17 @@ while ~endOfAdj
         
         nCon{nActCon} = numel(b0Cell{nActCon});
         
+        % Total no. of conditions
+        if nActCon == 1
+            nConTotal = nCon{nActCon};
+        else
+            nConTotal = nConTotal + nCon{nActCon};
+        end
+        
         % Prepare A ------------------------------------------------------------
 
         % Names of parameters
-        varNames = fields(con(nActCon).prm);
+        varNames = fields(con{nActCon}.prm);
 
         % For each parameter
         for n = 1:numel(varNames)
@@ -152,7 +162,7 @@ while ~endOfAdj
             % idxAdj of current parameter
             % Note: Length of idxAdj is 1 or nCon. Elements equal to NaN are not
             %       considered for building the A matrix.
-            idxAdj = con(nActCon).idxAdj.prm.(varName);
+            idxAdj = con{nActCon}.idxAdj.prm.(varName);
 
             % If parameter is not constant
             if any(~isnan(idxAdj))
@@ -164,7 +174,8 @@ while ~endOfAdj
                 if nActCon == 1
                     derRow{end+1} = [1:nCon{nActCon}]';
                 else
-                    derRow{end+1} = sum(vertcat(nCon{1:nActCon-1}))+[1:nCon{nActCon}]';
+                    % derRow{end+1} = sum(vertcat(nCon{1:nActCon-1})) + [1:nCon{nActCon}]'; % old, very slow
+                    derRow{end+1} = (nConTotal-nCon{nActCon}) + [1:nCon{nActCon}]';
                 end
                 
                 % Column for A matrix
@@ -203,7 +214,6 @@ while ~endOfAdj
     % Delete conditions or constraints and observations where all derivatives are zero (happens if all parameters of a condition or constraint are constant)
     con2del = find(sum(A,2) == 0);
     
-    
     % Clear variables with high memory consumption
     clear bCell b0Cell der derAll derRow derCol
     
@@ -231,7 +241,44 @@ while ~endOfAdj
         
         if all(isinf([lowerBounds; upperBounds])) % if no lower or upper bounds are specified
             
-            tic; dx = lscov(A, l, diag(P)); t2solve = toc;
+            tic;
+            
+            % If P is the unit matrix
+            if all(diag(P) == 1)
+                
+                dx = lscov(A, l);
+                
+            % If P is a diagonal matrix (correlations are not supported (yet))
+            else
+                
+                % lscov is very fast without weights and
+                %          very slow with    weights!
+                % If P is a diagonal matrix, A and l can be modified, so that
+                % P can be ommited. For this: 
+                % - each row a_i of A must be multiplied with sqrt(p_ii) and
+                % - each element l_i of l must be multiplied with sqrt(p_ii)
+                % This leads to Amod and lmod.
+                
+                % Var 1 -> very, very fast
+                fac = sqrt(full(diag(P)));
+                [row, col, a] = find(A);
+                amod = a.*fac(row);
+                Amod = sparse(row, col, amod);
+                lmod = l.*fac;
+                dx = lscov(Amod, lmod);
+                
+                % Var 2 -> slower
+                % Amod = bsxfun(@times, A, sqrt(full(diag(P))));
+                % lmod = bsxfun(@times, l, sqrt(full(diag(P))));
+                % dx = lscov(Amod, lmod);
+                
+                % Control
+                % dxControl = lscov(A, l, diag(P));
+                % errMax = max(abs(dx-dxControl));
+                
+            end
+            
+            t2solve = toc;
             
         else % lower or upper bounds are specified
             
@@ -342,10 +389,11 @@ while ~endOfAdj
     for nActCon = 1:numel(con) % number of actual condition
     
         % Get parameter, observations and constants as structure as input for the condition
-        [prm, cst, obs] = obj.getPrmCstObs(nActCon, nIt+1); % nIt+1 to get xhat instead of x0 in first iteration
+        % [prm, cst, obs] = obj.getPrmCstObs(nActCon, nIt+1); % nIt+1 to get xhat instead of x0 in first iteration
+        [prm, cst, obs] = getPrmCstObs(con{nActCon}, obj.prm, obj.cst, obj.obs, nIt+1);
 
         % Get function handles from condition function
-        [~, b0Fun] = con(nActCon).fun(prm, cst, obs);
+        [~, b0Fun] = con{nActCon}.fun(prm, cst, obs);
 
         bhatCell{nActCon} = b0Fun(prm, cst);
         
@@ -392,7 +440,7 @@ while ~endOfAdj
     end
     
     % Print numerical output
-    msg('T', sprintf('%4d %16.7f %16.7f %16.7f %12.2e %12.2e %12.0f %12.2e %12d %11.3fs', nIt, vPv, norm(dx), norm(v), maxLinError, epsKraus, conv, condN, nSatisfCsr, t2solve));
+    msg('T', sprintf('%4d %16.8e %16.8e %16.8e %12.4e %12.4e %12.0f %12.4e %12d %11.3fs', nIt, vPv, norm(dx), norm(v), maxLinError, epsKraus, conv, condN, nSatisfCsr, t2solve));
     
     % Worst normalized residuals -----------------------------------------------
 
@@ -409,12 +457,16 @@ while ~endOfAdj
         % Number of normalized residuals exceeding limit
         n = sum(abs(vNorm(idx)) >= p.RWAMaxSig);
         
-        msg('I', procHierarchy, sprintf('Worst *active* observations with normalized residuals vNorm >= %.1f:', p.RWAMaxSig));
+        % Maximum no. of reported observations
+        nMax = 100; % default
+        if n < nMax, nMax = n; end
+        
+        msg('I', procHierarchy, sprintf('%d (out of %d = %.2f%%) worst *active* observations with normalized residuals vNorm >= %.1f:', nMax, n, n/nObs*100, p.RWAMaxSig));
         
         if n > 0
             msg('T', sprintf('%4s %8s %12s %12s %12s %12s %12s %12s %12s %12s', 'i', 'idxAdj', 'vNorm', 'v', 'sigb', 'b', 'bhat', 'pFac', 'pFacRWA', 'allowRWA'));
-            for i = 1:n
-                msg('T', sprintf('%4d %8d %12.3f %12.3f %12.3f %12.3f %12.3f %12.3f %12.3f %12d', i, idx(i), abs(vNorm(idx(i))), v(idx(i)), sigb_priori(idx(i)), b(idx(i)), bhat(idx(i)), pFac(idx(i)), pFacRWA(idx(i)), allowRWA(idx(i))));
+            for i = 1:nMax
+                msg('T', sprintf('%4d %8d %12.5f %12.5f %12.5f %12.5f %12.5f %12.5f %12.5f %12d', i, idx(i), abs(vNorm(idx(i))), v(idx(i)), sigb_priori(idx(i)), b(idx(i)), bhat(idx(i)), pFac(idx(i)), pFacRWA(idx(i)), allowRWA(idx(i))));
             end
         else
             msg('I', procHierarchy, '-> None!');
@@ -430,12 +482,16 @@ while ~endOfAdj
         % Number of non active observations
         n = numel(idx); % or sum(~pAct)
         
-        msg('I', procHierarchy, sprintf('*Non active* observations (%.2f%%):', n/nObs*100));
+        % Maximum no. of reported observations
+        nMax = 100; % default
+        if n < nMax, nMax = n; end
+        
+        msg('I', procHierarchy, sprintf('%d (out of %d = %.2f%%) worst *non active* observations:', nMax, n, n/nObs*100));
         
         if n > 0
             msg('T', sprintf('%4s %8s %12s %12s %12s %12s %12s %12s %12s %12s', 'i', 'idxAdj', 'vNorm', 'v', 'sigb', 'b', 'bhat', 'pFac', 'pFacRWA', 'allowRWA'));
-            for i = 1:n
-                msg('T', sprintf('%4d %8d %12.3f %12.3f %12.3f %12.3f %12.3f %12.3f %12.3f %12d', i, idx(i), abs(vNorm(idx(i))), v(idx(i)), sigb_priori(idx(i)), b(idx(i)), bhat(idx(i)), pFac(idx(i)), pFacRWA(idx(i)), allowRWA(idx(i))));
+            for i = 1:nMax
+                msg('T', sprintf('%4d %8d %12.5f %12.5f %12.5f %12.5f %12.5f %12.5f %12.5f %12d', i, idx(i), abs(vNorm(idx(i))), v(idx(i)), sigb_priori(idx(i)), b(idx(i)), bhat(idx(i)), pFac(idx(i)), pFacRWA(idx(i)), allowRWA(idx(i))));
             end
         else
             msg('I', procHierarchy, '-> None!');
@@ -586,6 +642,19 @@ msg('V', mean_v                  , 'mean(v)'                       , 'Prec', 7);
 msg('V', std_vWithoutGrossErrors , 'std(v)  (without gross errors)', 'Prec', 7);
 msg('V', mean_vWithoutGrossErrors, 'mean(v) (without gross errors)', 'Prec', 7);
 
+% Report statistics for each observation category
+msg('S', {'OLSADJ' 'SOLVE' 'A POSTERIORI STOCHASTIC' 'OBSERVATION CATEGORIES'});
+for c = 1:numel(obj.obs.category)
+    msg('T', sprintf('CATEGORY %d: ''%s''', c, obj.obs.category{c}));
+    msg('V', sum(idxCat==c)                                      , 'number of observations'         , 'Prec', 0);
+    msg('V', std( v(idxCat==c))                                  , 'std(v)'                         , 'Prec', 7);
+    msg('V', mean(v(idxCat==c))                                  , 'mean(v)'                        , 'Prec', 7);
+    msg('V', sum(idxCat==c & pFacRWA==p.RWApFacOfGrossErrors)    , 'number of detected gross errors', 'Prec', 0);
+    msg('V', std( v(idxCat==c & pFacRWA~=p.RWApFacOfGrossErrors)), 'std(v)  (without gross errors)' , 'Prec', 7);
+    msg('V', mean(v(idxCat==c & pFacRWA~=p.RWApFacOfGrossErrors)), 'mean(v) (without gross errors)' , 'Prec', 7);
+end
+msg('E', {'OLSADJ' 'SOLVE' 'A POSTERIORI STOCHASTIC' 'OBSERVATION CATEGORIES'});
+
 msg('E', {'OLSADJ' 'SOLVE' 'A POSTERIORI STOCHASTIC'});
 
 % Save adjustment results to object --------------------------------------------
@@ -612,10 +681,10 @@ obj.res.mean_vWithoutGrossErrors = mean_vWithoutGrossErrors;
 
 % Output parameters results ----------------------------------------------------
 
-if p.ReportPrm
+if any(obj.prm.report)
 
     msg('I', procHierarchy, 'Parameters results:');
-    msg('T', sprintf('%5s %6s %16s %16s %16s %7s %5s  %s', 'idx', ...
+    msg('T', sprintf('%8s %6s %16s %16s %16s %7s %5s  %s', 'idx', ...
                                                            'const', ...
                                                            'x0', ...
                                                            'xhat', ...
@@ -624,16 +693,20 @@ if p.ReportPrm
                                                            'idx', ...
                                                            'label'));
 
-    for i = 1:height(obj.prm)
+    for i = 1:numel(obj.prm.x0)
 
-        msg('T', sprintf('%5d %6d %16.7f %16.7f %16.7f %7.2f %5d  %s', obj.prm.idxAdj(i), ...
-                                                                       obj.prm.const(i), ...
-                                                                       obj.prm.x0(i)   * obj.prm.scale4report(i), ...
-                                                                       obj.prm.xhat(i) * obj.prm.scale4report(i), ...
-                                                                       obj.prm.sig(i)  * obj.prm.scale4report(i), ...
-                                                                       obj.prm.scale4report(i), ...
-                                                                       obj.prm.idxAdj(i), ...
-                                                                       obj.prm.label{i}));
+        if obj.prm.report(i)
+
+            msg('T', sprintf('%8d %6d %16.5f %16.5f %16.5f %7.2f %5d  %s', obj.prm.idxAdj(i), ...
+                                                                           obj.prm.const(i), ...
+                                                                           obj.prm.x0(i)   * obj.prm.scale4report(i), ...
+                                                                           obj.prm.xhat(i) * obj.prm.scale4report(i), ...
+                                                                           obj.prm.sig(i)  * obj.prm.scale4report(i), ...
+                                                                           obj.prm.scale4report(i), ...
+                                                                           obj.prm.idxAdj(i), ...
+                                                                           obj.prm.label{i}));
+                                                                       
+        end
 
     end
 
@@ -642,29 +715,33 @@ end
 % Output parameters correlations -----------------------------------------------
 
 if p.Cxx
+    
+    if nPrm >= 6
    
-    msg('I', procHierarchy, 'Parameters correlations:');
-    msg('I', procHierarchy, 'Note: for each parameter the five highest correlations (r1...r5) are reported (format is idx : r).');
-    
-    msg('T', sprintf('%5s %14s %14s %14s %14s %14s %5s  %s', 'idx', 'r1', 'r2', 'r3', 'r4', 'r5', 'idx', 'label'));
+        msg('I', procHierarchy, 'Parameters correlations:');
+        msg('I', procHierarchy, 'Note: for each parameter the five highest correlations (r1...r5) are reported (format is idx : r).');
 
-    allLabels = obj.prm.label(~isnan(obj.prm.idxAdj));
-    
-    for i = 1:size(Cxx,1)
+        msg('T', sprintf('%5s %14s %14s %14s %14s %14s %5s  %s', 'idx', 'r1', 'r2', 'r3', 'r4', 'r5', 'idx', 'label'));
+
+        allLabels = obj.prm.label(~isnan(obj.prm.idxAdj));
+
+        for i = 1:size(Cxx,1)
+
+            [~, idxSort] = sort(abs(Rxx(i,:)), 'descend');
+
+            idxSort(idxSort == i) = [];
+
+            msg('T', sprintf('%5d %14s %14s %14s %14s %14s %5d  %s', i, ...
+                                                                     sprintf('%4d : %+.3f', idxSort(1), Rxx(i,idxSort(1))), ...
+                                                                     sprintf('%4d : %+.3f', idxSort(2), Rxx(i,idxSort(2))), ...
+                                                                     sprintf('%4d : %+.3f', idxSort(3), Rxx(i,idxSort(3))), ...
+                                                                     sprintf('%4d : %+.3f', idxSort(4), Rxx(i,idxSort(4))), ...
+                                                                     sprintf('%4d : %+.3f', idxSort(5), Rxx(i,idxSort(5))), ...
+                                                                     i, ...
+                                                                     allLabels{i}));
+
+        end
         
-        [~, idxSort] = sort(abs(Rxx(i,:)), 'descend');
-        
-        idxSort(idxSort == i) = [];
-        
-        msg('T', sprintf('%5d %14s %14s %14s %14s %14s %5d  %s', i, ...
-                                                                 sprintf('%4d : %+.3f', idxSort(1), Rxx(i,idxSort(1))), ...
-                                                                 sprintf('%4d : %+.3f', idxSort(2), Rxx(i,idxSort(2))), ...
-                                                                 sprintf('%4d : %+.3f', idxSort(3), Rxx(i,idxSort(3))), ...
-                                                                 sprintf('%4d : %+.3f', idxSort(4), Rxx(i,idxSort(4))), ...
-                                                                 sprintf('%4d : %+.3f', idxSort(5), Rxx(i,idxSort(5))), ...
-                                                                 i, ...
-                                                                 allLabels{i}));
-                                                             
     end
     
 end

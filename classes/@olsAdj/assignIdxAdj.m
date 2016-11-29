@@ -19,7 +19,7 @@ for i = 1:numel(con)
         varType = varTypes{1};
 
         % Names of design variable groups for selected variable type
-        varNames = fields(con(i).(varType));
+        varNames = fields(con{i}.(varType));
 
         % For each design variable group
         for n = 1:numel(varNames)
@@ -28,7 +28,7 @@ for i = 1:numel(con)
             varName = varNames{n};
 
             % Defined indices of parameter or observation structure
-            idxAll = con(i).(varType).(varName);
+            idxAll = con{i}.(varType).(varName);
 
             % Save all non constant indices in cell
             switch varType
@@ -74,7 +74,7 @@ for i = 1:numel(con)
         varType = varTypes{1};
         
         % Names of design variable groups for selected variable type
-        varNames = fields(con(i).(varType));
+        varNames = fields(con{i}.(varType));
 
         % For each design variable group
         for n = 1:numel(varNames)
@@ -83,10 +83,10 @@ for i = 1:numel(con)
             varName = varNames{n};
 
             % Defined indices of parameter or observation structure
-            idxAll = con(i).(varType).(varName);
+            idxAll = con{i}.(varType).(varName);
 
             % Save idxAdj in constraint structure
-            con(i).idxAdj.(varType).(varName) = obj.(varType).idxAdj(idxAll);
+            con{i}.idxAdj.(varType).(varName) = obj.(varType).idxAdj(idxAll);
 
         end
 
