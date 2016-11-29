@@ -5,15 +5,15 @@ function R = opk2R(om, ph, ka, varargin)
 validAngles = {'Gradian' 'Radian'};
 
 p = inputParser;
-p.addRequired(  'om');
-p.addRequired(  'ph');
-p.addRequired(  'ka');
-p.addParamValue('Unit', 'Gradian', @(x) any(strcmpi(x, validAngles)));
+p.addRequired( 'om');
+p.addRequired( 'ph');
+p.addRequired( 'ka');
+p.addParameter('Unit', 'Gradian', @(x) any(strcmpi(x, validAngles)));
 p.parse(om, ph, ka, varargin{:});
 p = p.Results;
 
 % R ----------------------------------------------------------------------------
-% Formula from Kraus, p. 489
+% Formula from Kraus, p. 489 
 
 if strcmpi(p.Unit, 'Gradian')
 

@@ -21,7 +21,7 @@ function save2(p2File, data, formatSpec)
 % ACKNOWLEDGMENTS
 % Fork of function 'save2', written by CaR.
 % ------------------------------------------------------------------------------
-% philipp.glira@geo.tuwien.ac.at
+% philipp.glira@gmail.com
 % ------------------------------------------------------------------------------
 
 % Input parsing ----------------------------------------------------------------

@@ -58,16 +58,16 @@ function [status, result] = runcmd(cmdStruct, varargin)
 %     opalsgrid.feature       = 'sigmaz';
 %     if ~exist(opalsgrid.outf), runcmd(opalsgrid); end
 % ------------------------------------------------------------------------------
-% philipp.glira@geo.tuwien.ac.at
+% philipp.glira@gmail.com
 % ------------------------------------------------------------------------------
 
 % Input parsing ----------------------------------------------------------------
 
 p = inputParser;
-p.addRequired(  'cmdStruct' ,     @isstruct);
-p.addParamValue('BatchFile' , [], @ischar);
-p.addParamValue('RunFld'    , [], @ischar);
-p.addParamValue('Pause'     , 0 , @(x) isscalar(x) && x > 0);
+p.addRequired( 'cmdStruct' ,     @isstruct);
+p.addParameter('BatchFile' , [], @ischar);
+p.addParameter('RunFld'    , [], @ischar);
+p.addParameter('Pause'     , 0 , @(x) isscalar(x) && x > 0);
 p.parse(cmdStruct, varargin{:});
 p = p.Results;
 % Clear required inputs to avoid confusion
