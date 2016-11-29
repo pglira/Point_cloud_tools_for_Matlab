@@ -11,13 +11,13 @@ for i = 1:g.nPC
     if ~ismember(i, p.IdxFixedPointClouds) % trafo only if point cloud is not fixed, i.e. loose
 
         % Load point cloud
-        pc = obj.loadPC(i);
+        PC = obj.loadPC(i);
 
         % Trafo
-        pc = pc.transform(1, obj.D.H{1,i}(1:3,1:3), obj.D.H{1,i}(1:3,4));
+        PC.transform(1, obj.D.H{1,i}(1:3,1:3), obj.D.H{1,i}(1:3,4));
 
         % Update mat file
-        pc.save(p2mat);
+        PC.save(p2mat);
         
     else
         

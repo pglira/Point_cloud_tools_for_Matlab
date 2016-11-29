@@ -18,7 +18,7 @@ function obj = exportPC(obj, i, varargin)
 % Call 'help globalICP.globalICP' for a minimal working example, which also 
 % includes this method.
 % ------------------------------------------------------------------------------
-% philipp.glira@geo.tuwien.ac.at
+% philipp.glira@gmail.com
 % ------------------------------------------------------------------------------
 
 % Start ------------------------------------------------------------------------

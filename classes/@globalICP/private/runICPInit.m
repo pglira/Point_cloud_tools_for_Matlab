@@ -8,8 +8,12 @@ msg('O', 'SetLogLevel', p.LogLevel);
 % Log to file
 diary off; fclose all;
 p2report = fullfile(obj.OutputFolder, 'ICPLog.txt');
-% if exist(p2report)==2, delete(p2report); end % delete old report file if any
-mkdir(fileparts(p2report));
+if exist(p2report)==2 % delete old report file if any
+    try delete(p2report); end
+end
+if ~exist(obj.OutputFolder, 'dir')
+    mkdir(obj.OutputFolder);
+end
 diary(p2report);
 
 g.proc = {'GLOBALICP' 'RUNICP'};

@@ -16,7 +16,7 @@ function obj = addPC(obj, varargin)
 % Call 'help globalICP.globalICP' for a minimal working example, which also 
 % includes this method.
 % ------------------------------------------------------------------------------
-% philipp.glira@geo.tuwien.ac.at
+% philipp.glira@gmail.com
 % ------------------------------------------------------------------------------
         
 % Start ------------------------------------------------------------------------
@@ -25,22 +25,26 @@ function obj = addPC(obj, varargin)
 nPC = numel(obj.PC);
 
 % Report
-procHierarchy = {'GLOBALICP' 'ADDPC' sprintf('POINT CLOUD NO. %d', nPC+1)};
+procHierarchy = {'GLOBALICP' 'ADDPC' sprintf('POINT CLOUD [%d]', nPC+1)};
 msg('S', procHierarchy, 'LogLevel', 'basic');
 
 % Import and save point cloud --------------------------------------------------
 
 % Create path to mat file
-if ischar(varargin{1}) && exist(varargin{1}) == 2 % if input is a file
-    [folder, file] = fileparts(varargin{1});
-    p2mat = fullfile(folder, [file '.mat']);
+if ischar(varargin{1}) % if input is a file
+    if exist(varargin{1}, 'file') % if input exists
+        [~, file] = fileparts(varargin{1});
+        p2mat = fullfile(obj.TempFolder, [file '.mat']);
+    else
+        error('File ''%s'' does not exist!', varargin{1});
+    end
 else % if input is an array
-    p2mat = fullfile(obj.PrjDir, ['PC_' datestr(now,'yyyymmdd_HHMMSS') '.mat']);
+    p2mat = fullfile(obj.TempFolder, ['PC_' datestr(now,'yyyymmdd_HHMMSS') '.mat']);
 end    
 msg('I', procHierarchy, sprintf('file = ''%s''', p2mat), 'LogLevel', 'basic');
 
 % Import point cloud (only if mat file not present)
-if exist(p2mat) ~= 2
+if ~exist(p2mat, 'file')
     objPC = pointCloud(varargin{:});
     objPC.save(p2mat);
 else

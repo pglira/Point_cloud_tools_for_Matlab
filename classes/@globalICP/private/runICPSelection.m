@@ -15,9 +15,24 @@ for i = 1:numel(PCQueryList)
 
     % Uniform sampling
     if p.UniformSamplingDistance(idxPCQuery) ~= 0, % if voxel size is zero, no uniform sampling
-        PC{idxPCQuery} = PC{idxPCQuery}.select('UniformSampling', p.UniformSamplingDistance(idxPCQuery));
+        PC{idxPCQuery}.select('UniformSampling', p.UniformSamplingDistance(idxPCQuery));
     end
 
+    % Normals needed?
+    if p.NormalSubsampling(idxPCQuery) || p.MaxLeverageSubsampling(idxPCQuery)
+        
+        if ~isfield(PC{idxPCQuery}.A, 'nx') % calculate normals only if not already present
+            
+            % Estimate normals
+            PC{idxPCQuery}.normals(p.PlaneSearchRadius);
+            
+            % Deactivate points where normal computation was not successful
+            PC{idxPCQuery}.act(isnan(PC{idxPCQuery}.A.nx)) = false;
+            
+        end
+        
+    end
+    
     % Save activated points
     actOrig = PC{idxPCQuery}.act;
 
@@ -34,18 +49,12 @@ for i = 1:numel(PCQueryList)
         actPair = p.PairList(:,1) == idxPCQuery & p.PairList(:,2) == idxPCSearch;
 
         % Consider overlap
-        % PC{idxPCQuery} = PC{idxPCQuery}.select('RangeSearch', VH{idxPCSearch}(:, 4:6), sqrt(3)*p.HullVoxelSize);
-        PC{idxPCQuery} = PC{idxPCQuery}.select('InVoxelHull', VH{idxPCSearch}(:, 1:3), p.HullVoxelSize);
+        % PC{idxPCQuery}.select('RangeSearch', VH{idxPCSearch}(:, 4:6), sqrt(3)*p.HullVoxelSize);
+        PC{idxPCQuery}.select('InVoxelHull', VH{idxPCSearch}(:, 1:3), p.HullVoxelSize);
 
-        % Subsampling?
-        if p.NormalSubsampling(idxPCQuery) || p.MaxLeverageSubsampling(idxPCQuery)
-            if ~isfield(PC{idxPCQuery}.A, 'nx') % calculate normals only if not already present
-                PC{idxPCQuery} = PC{idxPCQuery}.normals(p.PlaneSearchRadius);
-            end
-        end
-        if p.RandomSubsampling(idxPCQuery)     , PC{idxPCQuery} = PC{idxPCQuery}.select('RandomSampling'     , p.SubsamplingPercentPoi); end
-        if p.NormalSubsampling(idxPCQuery)     , PC{idxPCQuery} = PC{idxPCQuery}.select('NormalSampling'     , p.SubsamplingPercentPoi); end
-        if p.MaxLeverageSubsampling(idxPCQuery), PC{idxPCQuery} = PC{idxPCQuery}.select('MaxLeverageSampling', p.SubsamplingPercentPoi); end
+        if p.RandomSubsampling(idxPCQuery)     , PC{idxPCQuery}.select('RandomSampling'     , p.SubsamplingPercentPoi); end
+        if p.NormalSubsampling(idxPCQuery)     , PC{idxPCQuery}.select('NormalSampling'     , p.SubsamplingPercentPoi); end
+        if p.MaxLeverageSubsampling(idxPCQuery), PC{idxPCQuery}.select('MaxLeverageSampling', p.SubsamplingPercentPoi); end
 
         % Logical vector with query points for actual pair
         g.qp{actPair,1} = PC{idxPCQuery}.act;

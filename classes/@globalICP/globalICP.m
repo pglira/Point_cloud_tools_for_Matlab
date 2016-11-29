@@ -1,4 +1,4 @@
-classdef globalICP
+classdef globalICP < handle
     % GLOBALICP Class for global ICP problems.
     
     properties
@@ -11,6 +11,9 @@ classdef globalICP
         
         % Path to folder for output data
         OutputFolder
+        
+        % Path to folder for temporary data
+        TempFolder
         
         % Various data
         D
@@ -28,9 +31,14 @@ classdef globalICP
         % point clouds.
         % ----------------------------------------------------------------------
         % INPUT
-        % ['OutputFolder', OutputFolder]
-        % Path to directory in which output files are stored. If this option
-        % is omitted, the path given by the command 'cd' is used as directory.
+        % 1 ['OutputFolder', OutputFolder]
+        %   Path to directory in which output files are stored. If this option
+        %   is omitted, the path given by the command 'cd' is used as directory.
+        %
+        % 2 ['TempFolder', TempFolder]
+        %   Folder in which temporary files are saved, e.g. imported point 
+        %   clouds. If this option is omitted, the path given by the command
+        %   'tempdir' is used as directory.
         % ----------------------------------------------------------------------
         % OUTPUT
         % [obj]
@@ -40,23 +48,23 @@ classdef globalICP
         % 1 Minimal working example with 6 point clouds.
         %   
         %   % Create globalICP object
-        %   icp = globalICP('OutputFolder', 'Y:\temp');
+        %   icp = globalICP('OutputFolder', 'D:\temp');
         %
         %   % Add point clouds to object from plain text files
         %   % (Added point clouds are saved as mat files, e.g. LionScan1Approx.mat)
-        %   icp = icp.addPC('LionScan1Approx.xyz');
-        %   icp = icp.addPC('LionScan2Approx.xyz');
-        %   icp = icp.addPC('LionScan3Approx.xyz');
-        %   icp = icp.addPC('LionScan4Approx.xyz');
-        %   icp = icp.addPC('LionScan5Approx.xyz');
-        %   icp = icp.addPC('LionScan6Approx.xyz');
+        %   icp.addPC('LionScan1Approx.xyz');
+        %   icp.addPC('LionScan2Approx.xyz');
+        %   icp.addPC('LionScan3Approx.xyz');
+        %   icp.addPC('LionScan4Approx.xyz');
+        %   icp.addPC('LionScan5Approx.xyz');
+        %   icp.addPC('LionScan6Approx.xyz');
         % 
         %   % Plot all point clouds BEFORE ICP (each in a different random color)
         %   figure; icp.plot('Color', 'random');
         %   title('BEFORE ICP'); view(0,0);
         % 
         %   % Run ICP!
-        %   icp = icp.runICP('PlaneSearchRadius', 2);
+        %   icp.runICP('PlaneSearchRadius', 2);
         % 
         %   % Plot all point clouds AFTER ICP
         %   figure; icp.plot('Color', 'random');
@@ -76,20 +84,24 @@ classdef globalICP
         %   icp.exportPC(5, 'LionScan5.xyz');
         %   icp.exportPC(6, 'LionScan6.xyz');
         % ----------------------------------------------------------------------
-        % philipp.glira@geo.tuwien.ac.at
+        % philipp.glira@gmail.com
         % ----------------------------------------------------------------------
         
         % Input parsing --------------------------------------------------------
 
         p = inputParser;
-        p.addParamValue('OutputFolder', cd, @ischar);
+        p.addParameter('OutputFolder', cd     , @ischar);
+        p.addParameter('TempFolder'  , tempdir, @ischar);
         p.parse(varargin{:});
         p = p.Results;
         
-        % Temporary directory --------------------------------------------------
+        % Directories ----------------------------------------------------------
         
-        if ~exist(p.OutputFolder), mkdir(p.OutputFolder), end
+        if ~exist(p.OutputFolder, 'dir'), mkdir(p.OutputFolder), end
         obj.OutputFolder = p.OutputFolder;
+        
+        if ~exist(p.TempFolder, 'dir'), mkdir(p.TempFolder), end
+        obj.TempFolder = p.TempFolder;
         
         end
         

@@ -9,7 +9,12 @@ end
 
 clf;
 
-set(gcf, 'Name', 'ICP results');
+if beforeFirstMin
+    set(gcf, 'Name', 'ICP results', ...
+             'NumberTitle', 'off', ...
+             'MenuBar', 'none', ...
+             'DockControls', 'off');
+end
     
 % Plot point clouds (each in a different color) --------------------------------
 
@@ -31,9 +36,21 @@ end
     
 for i = 1:g.nPC
 
-    if i == 1, resetColorCounter = true; else resetColorCounter = false; end
     subplot(4,3,[1 2 4 5 7 8]);
-    PC{i}.plot('Color', 'random', 'ResetColorCounter', resetColorCounter, 'MaxPoi', 1e5, 'MaxPoi', floor(PC{i}.noPoints*percent2plot/100));
+    
+    % Select subset of points
+    maxPoints = floor(PC{i}.noPoints*percent2plot/100);
+    idxRandom = randperm(PC{i}.noPoints, maxPoints); % indices of randomly selected points
+    
+    % Plot!
+    plot3(PC{i}.X(idxRandom,1), ...
+          PC{i}.X(idxRandom,2), ...
+          PC{i}.X(idxRandom,3), ...
+          '.', ...
+          'MarkerSize', 1);
+      
+    % Set axes properties
+    if i == 1, axis equal; hold on; grid on; box on; rotate3d on; end
     
     if beforeFirstMin
         title('ICP initial state');

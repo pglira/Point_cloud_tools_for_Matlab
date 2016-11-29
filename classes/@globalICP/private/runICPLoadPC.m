@@ -9,7 +9,7 @@ for i = 1:g.nPC
 
     % Remove non active points if any
     if sum(~PC{i}.act) > 0
-        PC{i} = PC{i}.reconstruct;
+        PC{i}.reconstruct;
     end
 
 end

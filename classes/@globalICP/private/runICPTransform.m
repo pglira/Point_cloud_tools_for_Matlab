@@ -33,7 +33,7 @@ for i = 1:g.nPC
     if ~ismember(i, p.IdxFixedPointClouds) % trafo only if point cloud is not fixed, i.e. loose
 
         % Transformation
-        PC{i} = PC{i}.transform(m, R, t);
+        PC{i}.transform(m, R, t);
 
     end 
 

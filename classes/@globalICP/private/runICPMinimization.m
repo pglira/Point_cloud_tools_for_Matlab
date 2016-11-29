@@ -4,7 +4,7 @@ msg('S', {g.procICP{:} 'MINIMIZATION'}, 'LogLevel', 'basic');
 
 % Check if each point cloud is connected with other point clouds ---------------
 
-if g.nItICP == 1 % only in first iteration
+% if g.nItICP == 1 % only in first iteration
 
     nCorr = zeros(g.nPC, 1); % no. of correspondences for each point cloud
 
@@ -41,7 +41,7 @@ if g.nItICP == 1 % only in first iteration
 
     msg('T', '-------------------------------------------------------------------------------', 'LogLevel', 'basic');
 
-end
+% end
     
 % Adjustment -------------------------------------------------------------------
 
@@ -57,20 +57,28 @@ if p.NoOfTransfParam <= 7
 
         % Fixed point cloud?
         if ismember(i, p.IdxFixedPointClouds) % all fixed
-            constRotPrm   = true;
-            constTransPrm = true;
+            constRotPrm   = true(3,1);
+            constTransPrm = true(3,1);
             constScalePrm = true;
+        elseif p.NoOfTransfParam == 1 % only z translation
+            constRotPrm   = true(3,1);
+            constTransPrm = [true true false]';
+            constScalePrm = true;
+            % Würländer 'hack'
+            % constRotPrm   = [false false true]';
+            % constTransPrm = [true true false]';
+            % constScalePrm = true;
         elseif p.NoOfTransfParam == 3 % only translation parameters
-            constRotPrm   = true;
-            constTransPrm = false;
+            constRotPrm   = true(3,1);
+            constTransPrm = false(3,1);
             constScalePrm = true;
         elseif p.NoOfTransfParam == 6 % rigid body
-            constRotPrm   = false;
-            constTransPrm = false;
+            constRotPrm   = false(3,1);
+            constTransPrm = false(3,1);
             constScalePrm = true;
         elseif p.NoOfTransfParam == 7 % similarity transformation
-            constRotPrm   = false;
-            constTransPrm = false;
+            constRotPrm   = false(3,1);
+            constTransPrm = false(3,1);
             constScalePrm = false;
         end
 
@@ -105,24 +113,24 @@ if p.NoOfTransfParam <= 7
         if size(CP{i}.X1,1) >= p.NoOfTransfParam % just add correspondences if no. of corr. >= p.NoOfTransfParam
 
             % Add constants
-            [adj, adjIdx.cst_X1_x{i}] = adj.addCst('v', CP{i}.X1(:,1));
-            [adj, adjIdx.cst_X1_y{i}] = adj.addCst('v', CP{i}.X1(:,2));
-            [adj, adjIdx.cst_X1_z{i}] = adj.addCst('v', CP{i}.X1(:,3));
+            [adj, adjIdx.cst_X1_x{i}] = adj.addCst(CP{i}.X1(:,1));
+            [adj, adjIdx.cst_X1_y{i}] = adj.addCst(CP{i}.X1(:,2));
+            [adj, adjIdx.cst_X1_z{i}] = adj.addCst(CP{i}.X1(:,3));
 
-            [adj, adjIdx.cst_X2_x{i}] = adj.addCst('v', CP{i}.X2(:,1));
-            [adj, adjIdx.cst_X2_y{i}] = adj.addCst('v', CP{i}.X2(:,2));
-            [adj, adjIdx.cst_X2_z{i}] = adj.addCst('v', CP{i}.X2(:,3));
+            [adj, adjIdx.cst_X2_x{i}] = adj.addCst(CP{i}.X2(:,1));
+            [adj, adjIdx.cst_X2_y{i}] = adj.addCst(CP{i}.X2(:,2));
+            [adj, adjIdx.cst_X2_z{i}] = adj.addCst(CP{i}.X2(:,3));
 
-            [adj, adjIdx.cst_n1_x{i}] = adj.addCst('v', CP{i}.A1.nx);
-            [adj, adjIdx.cst_n1_y{i}] = adj.addCst('v', CP{i}.A1.ny);
-            [adj, adjIdx.cst_n1_z{i}] = adj.addCst('v', CP{i}.A1.nz);
+            [adj, adjIdx.cst_n1_x{i}] = adj.addCst(CP{i}.A1.nx);
+            [adj, adjIdx.cst_n1_y{i}] = adj.addCst(CP{i}.A1.ny);
+            [adj, adjIdx.cst_n1_z{i}] = adj.addCst(CP{i}.A1.nz);
 
             % Get sigma of correspondences
             sigdp_priori = 1.4826*mad(CP{i}.dp,1);
 
             % Add observations
             [adj, g.adjIdx.obs_dp{i}] = adj.addObs('b'          , zeros(size(CP{i}.X1,1),1), ...
-                                                   'sigb_priori', sigdp_priori, ...
+                                                   'sigb_priori', ones(size(CP{i}.X1,1),1)*sigdp_priori, ...
                                                    'pFac'       , CP{i}.A.w);
 
             % Add conditions
@@ -202,24 +210,24 @@ if p.NoOfTransfParam == 12
         if size(CP{i}.X1,1) >= p.NoOfTransfParam % just add correspondences if no. of corr. >= p.NoOfTransfParam
 
             % Add constants
-            [adj, adjIdx.cst_X1_x{i}] = adj.addCst('v', CP{i}.X1(:,1));
-            [adj, adjIdx.cst_X1_y{i}] = adj.addCst('v', CP{i}.X1(:,2));
-            [adj, adjIdx.cst_X1_z{i}] = adj.addCst('v', CP{i}.X1(:,3));
+            [adj, adjIdx.cst_X1_x{i}] = adj.addCst(CP{i}.X1(:,1));
+            [adj, adjIdx.cst_X1_y{i}] = adj.addCst(CP{i}.X1(:,2));
+            [adj, adjIdx.cst_X1_z{i}] = adj.addCst(CP{i}.X1(:,3));
 
-            [adj, adjIdx.cst_X2_x{i}] = adj.addCst('v', CP{i}.X2(:,1));
-            [adj, adjIdx.cst_X2_y{i}] = adj.addCst('v', CP{i}.X2(:,2));
-            [adj, adjIdx.cst_X2_z{i}] = adj.addCst('v', CP{i}.X2(:,3));
+            [adj, adjIdx.cst_X2_x{i}] = adj.addCst(CP{i}.X2(:,1));
+            [adj, adjIdx.cst_X2_y{i}] = adj.addCst(CP{i}.X2(:,2));
+            [adj, adjIdx.cst_X2_z{i}] = adj.addCst(CP{i}.X2(:,3));
 
-            [adj, adjIdx.cst_n1_x{i}] = adj.addCst('v', CP{i}.A1.nx);
-            [adj, adjIdx.cst_n1_y{i}] = adj.addCst('v', CP{i}.A1.ny);
-            [adj, adjIdx.cst_n1_z{i}] = adj.addCst('v', CP{i}.A1.nz);
+            [adj, adjIdx.cst_n1_x{i}] = adj.addCst(CP{i}.A1.nx);
+            [adj, adjIdx.cst_n1_y{i}] = adj.addCst(CP{i}.A1.ny);
+            [adj, adjIdx.cst_n1_z{i}] = adj.addCst(CP{i}.A1.nz);
 
             % Get sigma of correspondences
             sigdp_priori = 1.4826*mad(CP{i}.dp,1);
 
             % Add observations
             [adj, g.adjIdx.obs_dp{i}] = adj.addObs('b'          , zeros(size(CP{i}.X1,1),1), ...
-                                                   'sigb_priori', sigdp_priori, ...
+                                                   'sigb_priori', ones(size(CP{i}.X1,1),1)*sigdp_priori, ...
                                                    'pFac'       , CP{i}.A.w);
 
             % Add conditions

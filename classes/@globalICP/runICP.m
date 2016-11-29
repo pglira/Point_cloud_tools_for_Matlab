@@ -1,9 +1,9 @@
-function obj = runICP(obj, varargin)
+function runICP(obj, varargin)
 % RUNICP Run ICP algorithm.
 % ------------------------------------------------------------------------------
 % DESCRIPTION/NOTES
 % With this method the global ICP process is started. For a short description of
-% the ICP algorithm, run 'help globalICP'.
+% the ICP algorithm, run 'help globalICP.globalICP'.
 % ------------------------------------------------------------------------------
 % INPUT
 % 1 GENERAL ICP
@@ -16,8 +16,9 @@ function obj = runICP(obj, varargin)
 %
 %   c ['NoOfTransfParam', NoOfTransfParam]
 %     Number of transformation parameters that are used in the ICP algorithm for
-%     the transformation of the loose point clouds. Possible choices are 3, 6, 7
-%     or 12:
+%     the transformation of the loose point clouds. Possible choices are 1, 3, 
+%     6, 7 or 12:
+%     *  1 = only z translation parameter.
 %     *  3 = only 3 translation parameters (in x, y, and z).
 %     *  6 = rigid body transformation, i.e. 3 translation parameters plus
 %            3 rotational parameters.
@@ -131,44 +132,43 @@ function obj = runICP(obj, varargin)
 % ICPOptions.TrafoOriginalPointClouds = ;
 % ICPOptions.StopConditionNormdx      = ;
 % ------------------------------------------------------------------------------
-% OUTPUT
-% 1 [obj]
-%   Updated object of class globalICP.
-% ------------------------------------------------------------------------------
 % REFERENCES
-% To add
+% [1] Glira, P., Pfeifer, N., Ressl, C., Briese, C. (2015): A correspondence 
+%     framework for ALS strip adjustments based on variants of the ICP 
+%     algorithm. In: Journal for Photogrammetry, Remote Sensing and 
+%     Geoinformation Science (PFG) 2015(04), pp. 275-289.
 % ------------------------------------------------------------------------------
-% philipp.glira@geo.tuwien.ac.at
+% philipp.glira@gmail.com
 % ------------------------------------------------------------------------------
 
 % Input parsing ----------------------------------------------------------------
 
 p = inputParser;
-p.addParamValue('MaxNoIt'                , 5      , @(x) isnumeric(x) && isscalar(x) && x > 0);
-p.addParamValue('IdxFixedPointClouds'    , 1      , @(x) isrow(x));
-p.addParamValue('NoOfTransfParam'        , 6      , @(x) isnumeric(x) && isscalar(x) && ismember(x, [3 6 7 12]));
-p.addParamValue('HullVoxelSize'          , 'auto' , @(x) (isnumeric(x) && isscalar(x) && x > 0) || strcmpi(x, 'auto'));
-p.addParamValue('UniformSamplingDistance', 'auto' , @(x) isrow(x) || strcmpi(x, 'auto'));
-p.addParamValue('PlaneSearchRadius'      , 1      , @(x) isnumeric(x) && isscalar(x) && x > 0);
-p.addParamValue('WeightByRoughness'      , true   , @(x) islogical(x));
-p.addParamValue('WeightByDeltaAngle'     , true   , @(x) islogical(x));
-p.addParamValue('MaxDeltaAngle'          , 10     , @(x) isnumeric(x) && isscalar(x) && x > 0); % angle in degree!
-p.addParamValue('MaxDistance'            , 'auto' , @(x) (isnumeric(x) && isscalar(x) && x > 0) || strcmpi(x, 'auto'));
-p.addParamValue('MaxSigmaMad'            , 3      , @(x) isnumeric(x) && isscalar(x) && x > 0);
-p.addParamValue('MaxRoughness'           , 'auto' , @(x) (isnumeric(x) && isscalar(x) && x > 0) || strcmpi(x, 'auto'));
-p.addParamValue('LogLevel'               , 'basic', @(x) any(strcmpi(x, {'debug' 'basic'})));
-p.addParamValue('Plot'                   , false  , @(x) islogical(x));
-p.addParamValue('SubsetRadius'           , 0      , @(x) isnumeric(x) && isscalar(x) && x >= 0);
+p.addParameter('MaxNoIt'                , 5      , @(x) isnumeric(x) && isscalar(x) && x > 0);
+p.addParameter('IdxFixedPointClouds'    , 1      , @(x) isrow(x));
+p.addParameter('NoOfTransfParam'        , 6      , @(x) isnumeric(x) && isscalar(x) && ismember(x, [1 3 6 7 12]));
+p.addParameter('HullVoxelSize'          , 'auto' , @(x) (isnumeric(x) && isscalar(x) && x > 0) || strcmpi(x, 'auto'));
+p.addParameter('UniformSamplingDistance', 'auto' , @(x) isrow(x) || strcmpi(x, 'auto'));
+p.addParameter('PlaneSearchRadius'      , 1      , @(x) isnumeric(x) && isscalar(x) && x > 0);
+p.addParameter('WeightByRoughness'      , true   , @(x) islogical(x));
+p.addParameter('WeightByDeltaAngle'     , true   , @(x) islogical(x));
+p.addParameter('MaxDeltaAngle'          , 10     , @(x) isnumeric(x) && isscalar(x) && x > 0); % angle in degree!
+p.addParameter('MaxDistance'            , 'auto' , @(x) (isnumeric(x) && isscalar(x) && x > 0) || strcmpi(x, 'auto'));
+p.addParameter('MaxSigmaMad'            , 3      , @(x) isnumeric(x) && isscalar(x) && x > 0);
+p.addParameter('MaxRoughness'           , 'auto' , @(x) (isnumeric(x) && isscalar(x) && x > 0) || strcmpi(x, 'auto'));
+p.addParameter('LogLevel'               , 'basic', @(x) any(strcmpi(x, {'debug' 'basic'})));
+p.addParameter('Plot'                   , false  , @(x) islogical(x));
+p.addParameter('SubsetRadius'           , 0      , @(x) isnumeric(x) && isscalar(x) && x >= 0);
 % Undocumented
-p.addParamValue('PairList'                , []    , @(x) size(x,2) == 2 || isempty(x));
-p.addParamValue('RandomSubsampling'       , false , @islogical);
-p.addParamValue('NormalSubsampling'       , false , @islogical);
-p.addParamValue('MaxLeverageSubsampling'  , false , @islogical);
-p.addParamValue('SubsamplingPercentPoi'   , 10    , @(x) isnumeric(x) && isscalar(x) && x > 0);
-p.addParamValue('AdjOptions'              , []    , @(x) isstruct(x) || isempty(x));
-p.addParamValue('MinNoIntersectingVoxel'  , 1     , @(x) isnumeric(x) && isscalar(x) && x > 0);
-p.addParamValue('TrafoOriginalPointClouds', true  , @islogical);
-p.addParamValue('StopConditionNormdx'     , -1    , @(x) isnumeric(x) && isscalar(x));
+p.addParameter('PairList'                , []    , @(x) size(x,2) == 2 || isempty(x));
+p.addParameter('RandomSubsampling'       , false , @islogical);
+p.addParameter('NormalSubsampling'       , false , @islogical);
+p.addParameter('MaxLeverageSubsampling'  , false , @islogical);
+p.addParameter('SubsamplingPercentPoi'   , 10    , @(x) isnumeric(x) && isscalar(x) && x > 0);
+p.addParameter('AdjOptions'              , []    , @(x) isstruct(x) || isempty(x));
+p.addParameter('MinNoIntersectingVoxel'  , 1     , @(x) isnumeric(x) && isscalar(x) && x > 0);
+p.addParameter('TrafoOriginalPointClouds', true  , @islogical);
+p.addParameter('StopConditionNormdx'     , -1    , @(x) isnumeric(x) && isscalar(x));
 
 p.parse(varargin{:});
 p = p.Results; clear varargin
@@ -247,7 +247,7 @@ while (g.nItICP <= p.MaxNoIt) && (obj.D.stats{end}.normdx > p.StopConditionNormd
     
     % Save correspondences?
     obj = runICPSaveCorr(obj, p, g, CP);
-    
+        
     % End iteration
     g.nItICP = g.nItICP+1; % increase iteration number
     msg('E', g.procICP, 'LogLevel', 'basic');
@@ -260,7 +260,7 @@ if p.TrafoOriginalPointClouds
 end
 
 % Save results to output folder
-runICPSaveResults(obj, g);
+runICPSaveResults(obj, p, g);
 
 % Report transformation parameters
 runICPReportTrafo(obj, p, g);

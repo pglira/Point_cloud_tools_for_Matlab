@@ -15,7 +15,7 @@ function plot(objICP, varargin)
 % Call 'help globalICP.globalICP' for a minimal working example, which also 
 % includes this method.
 % ------------------------------------------------------------------------------
-% philipp.glira@geo.tuwien.ac.at
+% philipp.glira@gmail.com
 % ------------------------------------------------------------------------------
 
 % Plot each point cloud
@@ -25,12 +25,8 @@ for i = 1:numel(objICP.PC)
     pc = objICP.loadPC(i);
     
     % Plot
-    if i == 1, resetColorCounter = true; else resetColorCounter = false; end
-    pc.plot('ResetColorCounter', resetColorCounter, varargin{:});
+    pc.plot(varargin{:});
     
 end
-
-% Title
-title('Point cloud overview');
 
 end

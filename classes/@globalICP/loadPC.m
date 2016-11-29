@@ -1,4 +1,4 @@
-function pc = loadPC(objICP, i)
+function objPC = loadPC(objICP, i)
 % LOADPC Load point cloud to workspace.
 % ------------------------------------------------------------------------------
 % DESCRIPTION/NOTES
@@ -13,10 +13,9 @@ function pc = loadPC(objICP, i)
 % Call 'help globalICP.globalICP' for a minimal working example, which also 
 % includes this method.
 % ------------------------------------------------------------------------------
-% philipp.glira@geo.tuwien.ac.at
+% philipp.glira@gmail.com
 % ------------------------------------------------------------------------------
     
-load(objICP.PC{i});
-pc = obj;
+objPC = pointCloud(objICP.PC{i});
 
 end

@@ -23,7 +23,7 @@ for i = 1:g.nPC
     % Remove non active points
     PC{i}.act(:) = false;
     PC{i}.act(idx2Keep) = true;
-    PC{i} = PC{i}.reconstruct;
+    PC{i}.reconstruct;
 
     % Update query points
     idxPairs2update = find(p.PairList(:,1) == i);

@@ -27,8 +27,8 @@ for i = 1:g.nPC
         end
     end
     
-    res     = obj.D.adj{g.nItICP}.obs{idxObs, 'res'};
-    pFacRWA = obj.D.adj{g.nItICP}.obs{idxObs, 'pFacRWA'};
+    res     = obj.D.adj{g.nItICP}.obs.res(idxObs);
+    pFacRWA = obj.D.adj{g.nItICP}.obs.pFacRWA(idxObs);
 
     res = res(pFacRWA == max(pFacRWA));
     
