@@ -1,0 +1,9 @@
+function centerfigureonscreen(hFig)
+
+screenSize = get(groot, 'ScreenSize');
+hFig.Position = [screenSize(3)/2-hFig.Position(3)/2 ...
+                 screenSize(4)/2-hFig.Position(4)/2 ...
+                 hFig.Position(3) ...
+                 hFig.Position(4)];
+
+end
