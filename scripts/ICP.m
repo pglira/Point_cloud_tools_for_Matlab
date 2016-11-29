@@ -24,6 +24,11 @@ function trafoParam = ICP(varargin)
 % b ['OutputFormat', OutputFormat]
 %   Output format of transformed point clouds, e.g. 'ply', 'xyz', 'txt', 'las'.
 %
+% c ['TempFolder', TempFolder]
+%   Folder in which temporary files are saved, e.g. imported point clouds. If
+%   this option is omitted, the path given by the command 'tempdir' is used as
+%   directory.
+%
 % ------------------------------------------------------------------------------
 % ICP PARAMETERS
 % 
@@ -37,8 +42,9 @@ function trafoParam = ICP(varargin)
 %
 %   c ['NoOfTransfParam', NoOfTransfParam]
 %     Number of transformation parameters that are used in the ICP algorithm for
-%     the transformation of the loose point clouds. Possible choices are 3, 6, 7
-%     or 12:
+%     the transformation of the loose point clouds. Possible choices are 1, 3, 
+%     6, 7 or 12:
+%     *  1 = only z translation parameter.
 %     *  3 = only 3 translation parameters (in x, y, and z).
 %     *  6 = rigid body transformation, i.e. 3 translation parameters plus
 %            3 rotational parameters.
@@ -128,7 +134,7 @@ function trafoParam = ICP(varargin)
 % ------------------------------------------------------------------------------
 % EXAMPLES
 % ------------------------------------------------------------------------------
-% philipp.glira@geo.tuwien.ac.at
+% philipp.glira@gmail.com
 % ------------------------------------------------------------------------------
                 
 % IMPORT PARAMETERS
@@ -206,8 +212,10 @@ for i = 1:2:numel(varargin) % each second argument
     if strcmpi(prm, 'RedPoi'                  ), if isstr(val), val = str2num(val);          end, p.pointCloud.(prm) = val; ok = true; end
     if strcmpi(prm, 'BucketSize'              ), if isstr(val), val = str2num(val);          end, p.pointCloud.(prm) = val; ok = true; end
     if strcmpi(prm, 'HeaderLines'             ), if isstr(val), val = str2num(val);          end, p.pointCloud.(prm) = val; ok = true; end
+    if strcmpi(prm, 'Filter'                  ),                                                  p.pointCloud.(prm) = val; ok = true; end
     % Parameters for function globalICP.globalICP (parsing not here)
     if strcmpi(prm, 'OutputFolder'            ),                                                  p.globalICP.(prm) = val;  ok = true; end
+    if strcmpi(prm, 'TempFolder'              ),                                                  p.globalICP.(prm) = val;  ok = true; end
     % Parameters for function globalICP.runICP (parsing not here)
     if strcmpi(prm, 'MaxNoIt'                 ), if isstr(val), val = str2num(val);          end, p.runICP.(prm) = val;     ok = true; end 
     if strcmpi(prm, 'NoOfTransfParam'         ), if isstr(val), val = str2num(val);          end, p.runICP.(prm) = val;     ok = true; end 
@@ -245,10 +253,10 @@ end
 
 % Parsing of parameters for this function
 pp = inputParser;
-pp.addParamValue('InFiles'         , []   , @(x) iscell(x) || ischar(x)); % must be defined (default value is invalid)
-pp.addParamValue('FixedPointClouds', ''   , @(x) iscell(x) || isempty(x));
-pp.addParamValue('OutputFormat'    , 'las', @ischar);
-pp.addParamValue('Mask'            , ''   , @ischar);
+pp.addParameter('InFiles'         , []   , @(x) iscell(x) || ischar(x)); % must be defined (default value is invalid)
+pp.addParameter('FixedPointClouds', ''   , @(x) iscell(x) || isempty(x));
+pp.addParameter('OutputFormat'    , 'las', @ischar);
+pp.addParameter('Mask'            , ''   , @ischar);
 pp.parse(p.ICP);
 p.ICP = pp.Results;
 
