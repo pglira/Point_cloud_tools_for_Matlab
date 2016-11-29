@@ -25,7 +25,7 @@ classdef polyMesh
         % [obj]
         % Object instance of class polyMesh.
         % ----------------------------------------------------------------------
-        % philipp.glira@geo.tuwien.ac.at
+        % philipp.glira@gmail.com
         % ----------------------------------------------------------------------
         
         % Input parsing --------------------------------------------------------
