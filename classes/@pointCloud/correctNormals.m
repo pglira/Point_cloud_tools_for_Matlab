@@ -1,4 +1,4 @@
-function obj = correctNormals(obj)
+function correctNormals(obj)
 % CORRECTNORMALS Correct normal vectors.
 
 % Start ------------------------------------------------------------------------

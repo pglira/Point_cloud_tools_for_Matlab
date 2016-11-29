@@ -14,7 +14,7 @@ function info(obj, varargin)
 %   pc = pointCloud('Lion.xyz');
 %   pc.info('ExtInfo', true);
 % ------------------------------------------------------------------------------
-% philipp.glira@geo.tuwien.ac.at
+% philipp.glira@gmail.com
 % ------------------------------------------------------------------------------
 
 % Start ------------------------------------------------------------------------
@@ -25,7 +25,7 @@ msg('S', procHierarchy);
 % Input parsing ----------------------------------------------------------------
 
 p = inputParser;
-p.addParamValue('ExtInfo', false, @islogical);
+p.addParameter('ExtInfo', false, @islogical);
 p.parse(varargin{:});
 p = p.Results;
 
@@ -56,12 +56,6 @@ if p.ExtInfo
     msg('V', obj.cog(2), 'center of gravity / y');
     msg('V', obj.cog(3), 'center of gravity / z');
 
-    msg('V', obj.BucketSize, 'bucket size', 'Prec', 0);
-    
-    infoObj = whos('obj');
-    msg('V', infoObj.bytes/(1024*1024)  , 'memory consumption in Mbytes', 'Prec', 2);
-    msg('V', infoObj.bytes/size(obj.X,1), 'memory consumption for each point in bytes', 'Prec', 2);
-    
 end
 
 % End --------------------------------------------------------------------------

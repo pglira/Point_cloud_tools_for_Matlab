@@ -9,17 +9,13 @@ function save(obj, path)
 %   Path to mat file.
 % ------------------------------------------------------------------------------
 % EXAMPLES
-% 1 Import a point cloud and save it as mat file.
-%   pc = pointCloud('Lion.xyz');
-%   pc.save('Lion.mat');
-%
-% 2 Import, save and load a point cloud.
+% 1 Import, save and load a point cloud.
 %   pc = pointCloud('Lion.xyz');
 %   pc.save('Lion.mat');
 %   clear; % clear all variables
-%   load('Lion.mat'); pc = obj;
+%   pc = pointCloud('Lion.mat'); % load from mat file
 % ------------------------------------------------------------------------------
-% philipp.glira@geo.tuwien.ac.at
+% philipp.glira@gmail.com
 % ------------------------------------------------------------------------------
 
 % Input parsing ----------------------------------------------------------------
@@ -35,21 +31,14 @@ clear path
 
 procHierarchy = {'POINTCLOUD' 'SAVE'};
 msg('S', procHierarchy);
+msg('I', procHierarchy, sprintf('Point cloud label = ''%s''', obj.label));
 
 % Create directory if not already present
 p2folder = fileparts(p.path);
-if ~exist(p2folder) && ~isempty(p2folder), mkdir(p2folder); end
-
-% Retrieve size of object in GB
-infoObj = whos('obj');
-gb = infoObj.bytes/(1024*1024*1024);
+if ~exist(p2folder, 'dir') && ~isempty(p2folder), mkdir(p2folder); end
 
 % Save!
-if gb < 1.9 % if size of object is smaller 1.9 GB (threshold vor v7.3 is 2.0 GB)
-    save(p.path, 'obj', '-v6');
-else
-    save(p.path, 'obj', '-v7.3');
-end
+save(p.path, 'obj', '-v7.3');
 
 msg('E', procHierarchy);
 

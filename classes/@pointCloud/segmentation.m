@@ -33,15 +33,15 @@ function obj = segmentation(obj, r, varargin)
 % [1] Rabbani T., 2006: Automatic Reconstruction of Industrial Installations
 %     Using Point Clouds and Images
 % ------------------------------------------------------------------------------
-% philipp.glira@geo.tuwien.ac.at
+% philipp.glira@gmail.com
 % ------------------------------------------------------------------------------
 
 % Input parsing ----------------------------------------------------------------
 
 p = inputParser;
-p.addRequired(  'r'          , @(x) isscalar(x) && x>0);
-p.addParamValue('dAngleMax'  , 10, @(x) isscalar(x) && x>0);
-p.addParamValue('MinNoPoints', 100, @(x) isscalar(x) && x>0);
+p.addRequired( 'r'          , @(x) isscalar(x) && x>0);
+p.addParameter('dAngleMax'  , 10, @(x) isscalar(x) && x>0);
+p.addParameter('MinNoPoints', 100, @(x) isscalar(x) && x>0);
 p.parse(r, varargin{:});
 p = p.Results;
 % Clear required inputs to avoid confusion

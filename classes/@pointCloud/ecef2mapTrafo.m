@@ -1,11 +1,16 @@
-function objNew = ecef2mapTrafo(obj, mstruct, varargin)
+function ecef2mapTrafo(obj, mstruct, varargin)
 % ECEF2MAPTRAFO Coordinate transformation from ecef to map coordinates.
+%
+% Example: definition of mstruct for UTM33N
+% mstruct       = defaultm('utm');
+% mstruct.zone  = '33n';
+% mstruct.geoid = referenceEllipsoid('GRS 80');
+% mstruct       = defaultm(mstruct);
 
 % Input parsing ----------------------------------------------------------------
 
 p = inputParser;
-p.addRequired(  'mstruct');
-p.addParamValue('KDTree', true, @islogical);
+p.addRequired( 'mstruct');
 p.parse(mstruct, varargin{:});
 p = p.Results;
 % Clear required inputs to avoid confusion
@@ -23,16 +28,10 @@ msg('I', procHierarchy, sprintf('Point cloud label = ''%s''', obj.label));
 
 [xm, ym] = mfwdtran(p.mstruct, lat*180/pi, lon*180/pi, hEll); % lat, lon in degrees!
 
-% Create new object with transformed coordinates (and attributes) --------------
+% Update coordinates -----------------------------------------------------------
 
-objNew     = pointCloud([xm, ym, hEll], ...
-                        'Label'     , obj.label, ...
-                        'RedPoi'    , obj.redPoi, ...
-                        'BucketSize', obj.BucketSize, ...
-                        'KDTree'    , p.KDTree);
-
-objNew.A   = obj.A;
-objNew.act = obj.act;
+obj.X = [xm ym hEll];
+obj.info;
 
 % End --------------------------------------------------------------------------
 

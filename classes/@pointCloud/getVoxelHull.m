@@ -1,4 +1,4 @@
-function obj = getVoxelHull(obj, voxelSize, varargin)
+function getVoxelHull(obj, voxelSize, varargin)
 % GETVOXELHULL Compute the voxel hull of a point cloud.
 % ------------------------------------------------------------------------------
 % DESCRIPTION/NOTES
@@ -29,16 +29,16 @@ function obj = getVoxelHull(obj, voxelSize, varargin)
 % EXAMPLES
 % 1 Import a point cloud and compute its voxel hull.
 %   pc = pointCloud('Lion.xyz');
-%   pc = pc.getVoxelHull(5); % voxel size is 5mm
+%   pc.getVoxelHull(5); % voxel size is 5mm
 %   % The voxel hull can now be found in pc.voxelHull and pc.voxelHullVoxelSize 
 % ------------------------------------------------------------------------------
-% philipp.glira@geo.tuwien.ac.at
+% philipp.glira@gmail.com
 % ------------------------------------------------------------------------------
 
 % Input parsing ----------------------------------------------------------------
 
 p = inputParser;
-p.addRequired( 'voxelSize'       , @(x) isscalar(x) && x>0);
+p.addRequired('voxelSize', @(x) isscalar(x) && x>0);
 % Undocumented
 p.addParameter('Centroids', false, @islogical);
 p.parse(voxelSize, varargin{:});
@@ -55,7 +55,7 @@ msg('I', procHierarchy, sprintf('Point cloud label = ''%s''', obj.label));
 % Compute voxel hull -----------------------------------------------------------
 
 % Lower left point of activated points
-lim.min = min(obj.X(obj.act,:));
+lim.min = min(obj.X(obj.act,:), [], 1);
 % Round origin (voxel hulls have coincident voxel centers if mod(100, p.voxelSize) == 0)
 lim.min = (floor(lim.min/100))*100;
 
@@ -72,6 +72,12 @@ obj.voxelHull = [lim.min(1) + p.voxelSize/2 + voxel(:,1) * p.voxelSize ...
                  lim.min(2) + p.voxelSize/2 + voxel(:,2) * p.voxelSize ...
                  lim.min(3) + p.voxelSize/2 + voxel(:,3) * p.voxelSize];
 
+% Round voxel hull (because e.g. -100+0.025+1982*0.05 ~= -0.875)
+if p.voxelSize < 1
+    noDigits = abs(floor(log10(p.voxelSize)-1)) + 2; % e.g. for 0.05 -> noDigits = 3+2 = 5 (+2 is arbitrary choice to be on the safe side)
+    obj.voxelHull = round(obj.voxelHull, noDigits);
+end
+             
 % Save voxel size to object
 obj.voxelHullVoxelSize = p.voxelSize;
 

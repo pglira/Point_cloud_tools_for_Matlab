@@ -6,9 +6,9 @@ function obj = createRaster(obj, varargin)
 validRasterValue = {'average' 'linear' 'mask' 'plane'};
 
 p = inputParser;
-p.addParamValue('CellSize'     , 1        , @(x) isnumeric(x) && x>0);
-p.addParamValue('RasterValue'  , 'average', @(x) any(strcmpi(x, validRasterValue)));
-p.addParamValue('SearchRadius' , 3        , @(x) isnumeric(x) && x>0); % for 'RasterValue' 'average' and 'plane'
+p.addParameter('CellSize'     , 1        , @(x) isnumeric(x) && x>0);
+p.addParameter('RasterValue'  , 'average', @(x) any(strcmpi(x, validRasterValue)));
+p.addParameter('SearchRadius' , 3        , @(x) isnumeric(x) && x>0); % for 'RasterValue' 'average' and 'plane'
 p.parse(varargin{:});
 p = p.Results;
 

@@ -3,7 +3,7 @@ function plotPolar(obj, varargin)
 % Input parsing ----------------------------------------------------------------
 
 p = inputParser;
-p.addParamValue('MaxPoi', 10^6, @(x) isnumeric(x) && x>0);
+p.addParameter('MaxPoi', 10^6, @(x) isnumeric(x) && x>0);
 p.parse(varargin{:});
 p = p.Results;
 

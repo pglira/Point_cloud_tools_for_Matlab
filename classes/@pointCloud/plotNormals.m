@@ -1,4 +1,4 @@
-function plotNormals(obj, varargin)
+function hPlot = plotNormals(obj, varargin)
 % PLOTNORMALS Plot normal vectors of point cloud in 3d.
 % ------------------------------------------------------------------------------
 % DESCRIPTION/NOTES
@@ -20,49 +20,33 @@ function plotNormals(obj, varargin)
 % EXAMPLES
 % 1 Plot normals scaled by factor of 10.
 %   pc = pointCloud('Lion.xyz', 'Attributes', {'nx' 'ny' 'nz'});
-%   pc = pc.select('UniformSampling', 2);
+%   pc.select('UniformSampling', 2);
 %   pc.plot('Color', 'r', 'MarkerSize', 5);
-%   pc.plotNormals('Scale', 10);
+%   pc.plotNormals('Color', 'y', 'Scale', 10);
 % ------------------------------------------------------------------------------
-% philipp.glira@geo.tuwien.ac.at
+% philipp.glira@gmail.com
 % ------------------------------------------------------------------------------
 
 % Input parsing ----------------------------------------------------------------
 
 p = inputParser;
-p.addParamValue('Arrows', true, @islogical);
-p.addParamValue('Scale' , 1   , @isnumeric);
-p.addParamValue('Color' , 'm');
+p.addParameter('Arrows', true, @islogical);
+p.addParameter('Scale' , 1   , @isnumeric);
+p.addParameter('Color' , 'm');
+% Undocumented
+p.addParameter('Axes', gca);
 p.parse(varargin{:});
 p = p.Results;
-
-% Start ------------------------------------------------------------------------
-
-procHierarchy = {'POINTCLOUD' 'PLOTNORMALS'};
-msg('S', procHierarchy);
-msg('I', procHierarchy, sprintf('Point cloud label = ''%s''', obj.label));
 
 % Plot of normals --------------------------------------------------------------
 
 % Plot!
 if p.Arrows
-    quiver3(obj.X(obj.act,1), obj.X(obj.act,2), obj.X(obj.act,3), obj.A.nx(obj.act)*p.Scale, obj.A.ny(obj.act)*p.Scale, obj.A.nz(obj.act)*p.Scale, 0, 'Color', p.Color); % faster than plot3!
+    hPlot = quiver3(p.Axes, obj.X(obj.act,1), obj.X(obj.act,2), obj.X(obj.act,3), obj.A.nx(obj.act)*p.Scale, obj.A.ny(obj.act)*p.Scale, obj.A.nz(obj.act)*p.Scale, 0, 'Color', p.Color); % faster than plot3!
 else
-    plot3([obj.X(obj.act,1) obj.X(obj.act,1)+obj.A.nx(obj.act)*p.Scale]', ...
-          [obj.X(obj.act,2) obj.X(obj.act,2)+obj.A.ny(obj.act)*p.Scale]', ...
-          [obj.X(obj.act,3) obj.X(obj.act,3)+obj.A.nz(obj.act)*p.Scale]', 'Color', p.Color);
+    hPlot = plot3(p.Axes, [obj.X(obj.act,1) obj.X(obj.act,1)+obj.A.nx(obj.act)*p.Scale]', ...
+                          [obj.X(obj.act,2) obj.X(obj.act,2)+obj.A.ny(obj.act)*p.Scale]', ...
+                          [obj.X(obj.act,3) obj.X(obj.act,3)+obj.A.nz(obj.act)*p.Scale]', 'Color', p.Color);
 end
-
-xlabel('x');
-ylabel('y');
-zlabel('z');
-hold('on');
-axis('equal');
-grid('on');
-set(gca, 'Color' , [0.3 0.3 0.3]);
-
-% End --------------------------------------------------------------------------
-
-msg('E', procHierarchy);
 
 end

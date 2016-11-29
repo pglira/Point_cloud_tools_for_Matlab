@@ -18,15 +18,15 @@ function obj = addAttribute(obj, attribute)
 % EXAMPLES
 % 1 Calculate and visualize the slope attribute of a point cloud.
 %   pc = pointCloud('Lion.xyz', 'Attributes', {'nx' 'ny' 'nz' 'roughness'});
-%   pc = pc.addAttribute('slope');
-%   pc.plot('Attribute', 'slope', 'MarkerSize', 5);
+%   pc.addAttribute('slope');
+%   pc.plot('Color', 'A.slope', 'MarkerSize', 5);
 %
 % 2 Calculate and visualize the exposition attribute of a point cloud.
 %   pc = pointCloud('Lion.xyz', 'Attributes', {'nx' 'ny' 'nz' 'roughness'});
-%   pc = pc.addAttribute('exposition');
-%   pc.plot('Attribute', 'exposition', 'MarkerSize', 5);
+%   pc.addAttribute('exposition');
+%   pc.plot('Color', 'A.exposition', 'MarkerSize', 5);
 % ------------------------------------------------------------------------------
-% philipp.glira@geo.tuwien.ac.at
+% philipp.glira@gmail.com
 % ------------------------------------------------------------------------------
 
 % Input parsing ----------------------------------------------------------------
@@ -45,7 +45,6 @@ clear attribute
 procHierarchy = {'POINTCLOUD' 'ADDATTRIBUTE'};
 msg('S', procHierarchy);
 msg('I', procHierarchy, sprintf('Point cloud label = ''%s''', obj.label));
-msg('I', procHierarchy, sprintf('IN: attribute = ''%s''', p.attribute));
 
 % Add attribute ----------------------------------------------------------------
 

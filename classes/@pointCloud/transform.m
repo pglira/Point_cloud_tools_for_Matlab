@@ -1,4 +1,4 @@
-function objNew = transform(obj, m, A, t)
+function transform(obj, m, A, t, varargin)
 % TRANSFORM Coordinate transformation of point cloud.
 % ------------------------------------------------------------------------------
 % DESCRIPTION/NOTES
@@ -33,15 +33,15 @@ function objNew = transform(obj, m, A, t)
 % 1 Rotate point cloud by 100 gradians (=90 degree) about z axis.
 %   pc = pointCloud('Lion.xyz');
 %   R = opk2R(0, 0, 100); % create rotation matrix
-%   pc = pc.transform(1, R, zeros(3,1)); % no scale, no translation
+%   pc.transform(1, R, zeros(3,1)); % no scale, no translation
 %   pc.plot;
 %
 % 2 Apply only scale.
 %   pc = pointCloud('Lion.xyz');
-%   pc = pc.transform(1e-3, eye(3), zeros(3,1)); % transformation from mm -> m
+%   pc.transform(1e-3, eye(3), zeros(3,1)); % transformation from mm -> m
 %   pc.plot;
 % ------------------------------------------------------------------------------
-% philipp.glira@geo.tuwien.ac.at
+% philipp.glira@gmail.com
 % ------------------------------------------------------------------------------
 
 % Input parsing ----------------------------------------------------------------
@@ -117,7 +117,9 @@ XhTrafo = H * Xh';
 
 % Transformed non homogeneous coordinates
 XNewRed    = homocoord(XhTrafo'); % reduced
-XNewNonRed = [XNewRed(:,1)+obj.redPoi(1) XNewRed(:,2)+obj.redPoi(2) XNewRed(:,3)+obj.redPoi(3)]; % non reduced
+% XNewNonRed = [XNewRed(:,1)+obj.redPoi(1) XNewRed(:,2)+obj.redPoi(2) XNewRed(:,3)+obj.redPoi(3)]; % non reduced
+
+obj.X = XNewRed;
 
 % Transformation of normals (if present) ---------------------------------------
 
@@ -144,20 +146,11 @@ if isstruct(obj.A)
         obj.A.ny = n(:,2);
         obj.A.nz = n(:,3);
 
-        obj = obj.correctNormals;
+        obj.correctNormals;
 
     end
     
 end
-
-% Create new object with transformed coordinates (and attributes) --------------
-
-objNew     = pointCloud(XNewNonRed, ...
-                        'Label'     , obj.label, ...
-                        'RedPoi'    , obj.redPoi, ...
-                        'BucketSize', obj.BucketSize);
-objNew.A   = obj.A;
-objNew.act = obj.act;
 
 % End --------------------------------------------------------------------------
 

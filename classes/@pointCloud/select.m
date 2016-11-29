@@ -1,4 +1,4 @@
-function [obj, varargout] = select(obj, selmode, varargin)
+function varargout = select(obj, selmode, varargin)
 % SELECT Select a subset of points.
 % ------------------------------------------------------------------------------
 % DESCRIPTION/NOTES
@@ -25,17 +25,18 @@ function [obj, varargout] = select(obj, selmode, varargin)
 %   13 'KnnSearch'           -> Selection of K nearest neighbors for each point
 %                               of another point cloud.
 %   14 'GeoTiff'             -> Selection of points based on a GeoTiff file.
-%   15 'CrossSection'        -> Selection of points in a vertical profile.
+%   15 'Profile'             -> Selection of points in a vertical profile.
+%   16 'ByIDs'               -> Selection of points by point IDs.
 % ------------------------------------------------------------------------------
 % 1 'All'
 %   DESCRIPTION Select all points. No further inputs required.
 %   EXAMPLE     pc = pointCloud('Lion.xyz');
-%               pc = pc.select('All');
+%               pc.select('All');
 % ------------------------------------------------------------------------------
 % 2 'None'
 %   DESCRIPTION Deactivate all points. No further inputs required.
 %   EXAMPLE     pc = pointCloud('Lion.xyz');
-%               pc = pc.select('None');
+%               pc.select('None');
 % ------------------------------------------------------------------------------
 % 3 'RandomSampling'
 %   DESCRIPTION Random sampling of a percentage of points.
@@ -43,7 +44,7 @@ function [obj, varargout] = select(obj, selmode, varargin)
 %               Percentage of points to select.
 %   EXAMPLE     Select 5 percent of all points.
 %               pc = pointCloud('Lion.xyz');
-%               pc = pc.select('RandomSampling', 5);
+%               pc.select('RandomSampling', 5);
 %               pc.plot;
 % ------------------------------------------------------------------------------
 % 4 'IntervalSampling'
@@ -52,7 +53,7 @@ function [obj, varargout] = select(obj, selmode, varargin)
 %               Defintion of interval in which points are selected.
 %   EXAMPLE     Select each 50-th point.
 %               pc = pointCloud('Lion.xyz');
-%               pc = pc.select('IntervalSampling', 50);
+%               pc.select('IntervalSampling', 50);
 %               pc.plot;
 % ------------------------------------------------------------------------------
 % 5 'UniformSampling'
@@ -66,7 +67,7 @@ function [obj, varargout] = select(obj, selmode, varargin)
 %               mean sampling distance in each coordinate direction.
 %   EXAMPLE     Select points with a mean sampling distance of 3mm.
 %               pc = pointCloud('Lion.xyz');
-%               pc = pc.select('UniformSampling', 3);
+%               pc.select('UniformSampling', 3);
 %               pc.plot('MarkerSize', 5);
 % ------------------------------------------------------------------------------
 % 6 'MaxLeverageSampling'
@@ -79,9 +80,9 @@ function [obj, varargout] = select(obj, selmode, varargin)
 %               Percentage of points to select.
 %   EXAMPLE     Select geometrically stable points.
 %               pc = pointCloud('Lion.xyz');
-%               pc = pc.select('UniformSampling', 2);
-%               pc = pc.normals(1);
-%               pc = pc.select('MaxLeverageSampling', 25);
+%               pc.select('UniformSampling', 2);
+%               pc.normals(1);
+%               pc.select('MaxLeverageSampling', 25);
 %               pc.plot('MarkerSize', 5);
 % ------------------------------------------------------------------------------
 % 7 'NormalSampling'
@@ -89,7 +90,7 @@ function [obj, varargout] = select(obj, selmode, varargin)
 %               distribution of their normals in angular space is as large as
 %               possible. For this the angular space (exposition=x vs. slope=y)
 %               is divided into classes of equal angular extension (e.g.
-%               10 degree × 10 degree), and points are uniformly sampled among 
+%               10 degree x 10 degree), and points are uniformly sampled among 
 %               these classes. The normal vectors are required for this option.
 %   INPUT       1 [percentPoi]
 %                 Percentage of points to select.
@@ -99,17 +100,17 @@ function [obj, varargout] = select(obj, selmode, varargin)
 %                 Class width on slope axis (=y).
 %   EXAMPLES    1 Select 5 percent of all points.
 %                 pc = pointCloud('Lion.xyz');
-%                 pc = pc.select('UniformSampling', 2);
-%                 pc = pc.normals(1);
-%                 pc = pc.select('NormalSampling', 10);
+%                 pc.select('UniformSampling', 2);
+%                 pc.normals(1);
+%                 pc.select('NormalSampling', 10);
 %                 pc.plot('MarkerSize', 5);
 %               2 Define class widths.
 %                 pc = pointCloud('Lion.xyz');
-%                 pc = pc.select('UniformSampling', 2);
-%                 pc = pc.normals(1);
-%                 pc = pc.select('NormalSampling', 10, ...
-%                                                'DeltaAngleExposition', 10, ...
-%                                                'DeltaAngleSlope'     , 5);
+%                 pc.select('UniformSampling', 2);
+%                 pc.normals(1);
+%                 pc.select('NormalSampling', 10, ...
+%                                             'DeltaAngleExposition', 10, ...
+%                                             'DeltaAngleSlope'     , 5);
 %                 pc.plot('MarkerSize', 5);
 % ------------------------------------------------------------------------------
 % 8 'Attribute'
@@ -123,19 +124,22 @@ function [obj, varargout] = select(obj, selmode, varargin)
 %               pc = pointCloud('Lion.xyz', 'Attributes', {'nx' 'ny' 'nz' 'roughness'});
 %               % Note: the imported attributes are saved as fields in the
 %               % structure pc.A, e.g. the roughness in saved in pc.A.roughness.
-%               pc = pc.select('Attribute', 'roughness', [0.01 0.3]);
+%               pc.select('Attribute', 'roughness', [0.01 0.3]);
 %               pc.plot;
 % ------------------------------------------------------------------------------
 % 9 'Limits'
 %   DESCRIPTION Selection of points within a selection window. The window is
 %               defined by its coordinate limits in x, y and z.
-%   INPUT       [limitsMinMax]
-%               Selection window as 3-by-2 matrix: [minX maxX
-%                                                   minY maxY
-%                                                   minZ maxZ]
+%   INPUT       1 [limitsMinMax]
+%                 Selection window as 3-by-2 matrix: [minX maxX
+%                                                     minY maxY
+%                                                     minZ maxZ]
+%               2 ['Reduced', reduced]
+%                 Logical value which specifies if limits are given in reduced
+%                 coordinates (true) or not (false=default).
 %   EXAMPLE     Selection of the lions head.
 %               pc = pointCloud('Lion.xyz');
-%               pc = pc.select('Limits', [-Inf -10; -30 20; -10 Inf]);
+%               pc.select('Limits', [-Inf -10; -30 20; -10 Inf]);
 %               pc.plot;
 % ------------------------------------------------------------------------------
 % 10 'InPolygon'
@@ -145,7 +149,7 @@ function [obj, varargout] = select(obj, selmode, varargin)
 %               coordinates of one polygon vertex.
 %   EXAMPLE     Selection of the lions tail.
 %               pc = pointCloud('Lion.xyz');
-%               pc = pc.select('InPolygon', [45 4; 45 -7; 56 -7; 71 -2; 71 4; 63 6]);
+%               pc.select('InPolygon', [45 4; 45 -7; 56 -7; 71 -2; 71 4; 63 6]);
 %               pc.plot;
 % ------------------------------------------------------------------------------
 % 11 'InVoxelHull'
@@ -165,9 +169,9 @@ function [obj, varargout] = select(obj, selmode, varargin)
 %               pcScan2 = pointCloud('LionScan2.xyz');
 %               pcScan1.plot('Color', 'r');
 %               pcScan2.plot('Color', 'b');
-%               pcScan1 = pcScan1.getVoxelHull(2);
-%               pcScan2 = pcScan2.select('InVoxelHull', pcScan1.voxelHull, ...
-%                                                       pcScan1.voxelHullVoxelSize);
+%               pcScan1.getVoxelHull(2);
+%               pcScan2.select('InVoxelHull', pcScan1.voxelHull, ...
+%                                             pcScan1.voxelHullVoxelSize);
 %               pcScan2.plot('Color', 'm');
 % ------------------------------------------------------------------------------
 % 12 'RangeSearch'
@@ -184,10 +188,10 @@ function [obj, varargout] = select(obj, selmode, varargin)
 %   EXAMPLE     First select a subset of points with uniform sampling, then
 %               search all points within the range of 1 from these points.
 %               pc = pointCloud('Lion.xyz');
-%               pc = pc.select('UniformSampling', 5);
+%               pc.select('UniformSampling', 5);
 %               points = pc.X(pc.act,:);
-%               pc = pc.select('All');
-%               pc = pc.select('RangeSearch', points, 1);
+%               pc.select('All');
+%               pc.select('RangeSearch', points, 1);
 %               pc.plot;
 % ------------------------------------------------------------------------------
 % 13 'KnnSearch'
@@ -201,13 +205,15 @@ function [obj, varargout] = select(obj, selmode, varargin)
 %               3 ['Distance', distance]
 %                 String or function handle specifying the distance metric. Run
 %                 doc rangesearch for further details.
+%   OUTPUT      [Distances]
+%               Distances to nearest neighbors n-by-k matrix.
 %   EXAMPLE     First select a subset of points with uniform sampling, then
 %               search the 500 nearest neighbors of these points.
 %               pc = pointCloud('Lion.xyz');
-%               pc = pc.select('UniformSampling', 10);
+%               pc.select('UniformSampling', 10);
 %               points = pc.X(pc.act,:);
-%               pc = pc.select('All');
-%               pc = pc.select('KnnSearch', points, 'K', 500);
+%               pc.select('All');
+%               pc.select('KnnSearch', points, 'K', 500);
 %               pc.plot;
 % ------------------------------------------------------------------------------
 % 14 'GeoTiff'
@@ -225,35 +231,38 @@ function [obj, varargout] = select(obj, selmode, varargin)
 %                 Optional reduction point of geotiff file specified as vector
 %                 with 3 elements.
 % ------------------------------------------------------------------------------
-% 15 'CrossSection'
-%   DESCRIPTION Selection of points within a cross section. The cross section is
-%               defined by start point (x/y), end point (x,y) and width.
+% 15 'Profile'
+%   DESCRIPTION Selection of points within a vertical profile. The profile
+%               is defined by start point (x/y), end point (x,y) and width.
 %   INPUTS      1 [lineStart]
-%                 Starting point of cross section defined as vector with 2
-%                 elements: [startX startY].
+%                 Starting point of profile defined as vector with 2 elements:
+%                 [startX startY].
 %               2 [lineEnd]
-%                 Ending point of cross section defined as vector with 2
-%                 elements: [endX endY].
+%                 Ending point of profile defined as vector with 2 elements:
+%                 [endX endY].
 %               3 [lineWidth]
-%                 Width of cross section.
+%                 Width of profile.
 %   OUTPUT      [Azimuth]
-%               Azimuth of cross section. The azimuth can be used for the
-%               visualization of the cross section with view(azimuth, 0).
-%   EXAMPLE     Cross section through point cloud.
+%               Azimuth of profile. The azimuth can be used for the
+%               visualization of the profile with view(azimuth, 0).
+%   EXAMPLE     Profile through point cloud.
 %               pc = pointCloud('Lion.xyz');
-%               [pc, az] = pc.select('CrossSection', [ 100 0], [-100 0], 2);
+%               az = pc.select('Profile', [ 100 0], [-100 0], 2);
 %               pc.plot; view(az,0);
 % ------------------------------------------------------------------------------
-% OUTPUT FOR ALL SELECTION STRATEGIES
-% 1 [obj]
-%   Updated object.
+% 16 'ByIDs'
+%   DESCRIPTION Selection of points by point IDs. For this, the point IDs have
+%               to be saved as point attribute 'id'.
+%   INPUTS      [IDs2select]
+%               Vector of point IDs to select.
 % ------------------------------------------------------------------------------
 % REFERENCES
-% [1] Glira P., Pfeifer N., Briese C., Ressl C., 2014: A correspondence
-%     framework for ALS strip adjustments based on variants of the ICP
-%     algorithm.
+% [1] Glira, P., Pfeifer, N., Ressl, C., Briese, C. (2015): A correspondence 
+%     framework for ALS strip adjustments based on variants of the ICP 
+%     algorithm. In: Journal for Photogrammetry, Remote Sensing and 
+%     Geoinformation Science (PFG) 2015(04), pp. 275-289.
 % ------------------------------------------------------------------------------
-% philipp.glira@geo.tuwien.ac.at
+% philipp.glira@gmail.com
 % ------------------------------------------------------------------------------
 
 % Input parsing ----------------------------------------------------------------
@@ -272,7 +281,8 @@ validSelmode = {'All'                 ... % 1
                 'RangeSearch'         ... % 12
                 'KnnSearch'           ... % 13
                 'GeoTiff'             ... % 14
-                'CrossSection'};          % 15
+                'Profile'             ... % 15
+                'ByIDs'};                 % 16
 
 p = inputParser;
 p.addRequired('selmode', @(x) any(strcmpi(x, validSelmode)));
@@ -321,7 +331,7 @@ end
 if strcmpi(selmode, 'RandomSampling')
 
     % Temp: set random seed
-    rng(5);
+    % rng(5);
     
     % Input parsing ------------------------------------------------------------
     
@@ -535,9 +545,9 @@ if strcmpi(selmode, 'NormalSampling')
     % Input parsing ------------------------------------------------------------
     
     p = inputParser;
-    p.addRequired(  'percentPoi'               , @(x) numel(x)==1 && isnumeric(x) && x>0 && x<100);
-    p.addParamValue('DeltaAngleExposition', 10 , @(x) numel(x)==1 && isnumeric(x) && x>0 && mod(400,x)==0);
-    p.addParamValue('DeltaAngleSlope'     , 2.5, @(x) numel(x)==1 && isnumeric(x) && x>0 && mod(100,x)==0);
+    p.addRequired( 'percentPoi'               , @(x) numel(x)==1 && isnumeric(x) && x>0 && x<100);
+    p.addParameter('DeltaAngleExposition', 10 , @(x) numel(x)==1 && isnumeric(x) && x>0 && mod(400,x)==0);
+    p.addParameter('DeltaAngleSlope'     , 2.5, @(x) numel(x)==1 && isnumeric(x) && x>0 && mod(100,x)==0);
     p.parse(varargin{:});
     p = p.Results;
 
@@ -547,8 +557,8 @@ if strcmpi(selmode, 'NormalSampling')
     idxAct = find(obj.act);
     
     % Add attributes exposition and slope temporarily if not present
-    if ~isfield(obj.A, 'exposition'), obj = obj.addAttribute('exposition'); delExp = true; else delExp = false; end
-    if ~isfield(obj.A, 'slope')     , obj = obj.addAttribute('slope');      delSlo = true; else delSlo = false; end
+    if ~isfield(obj.A, 'exposition'), obj.addAttribute('exposition'); delExp = true; else delExp = false; end
+    if ~isfield(obj.A, 'slope')     , obj.addAttribute('slope');      delSlo = true; else delSlo = false; end
     
     % Points in normal space
     XNormalSpace = [obj.A.exposition(idxAct) obj.A.slope(idxAct)];
@@ -677,7 +687,8 @@ if strcmpi(selmode, 'Limits')
     % Input parsing ------------------------------------------------------------
 
     p = inputParser;
-    p.addRequired('limitsMinMax', @(x) isnumeric(x) && size(x,1)==3 && size(x,2)==2);
+    p.addRequired( 'limitsMinMax', @(x) isnumeric(x) && size(x,1)==3 && size(x,2)==2);
+    p.addParameter('Reduced', false, @islogical);
     p.parse(varargin{:});
     p = p.Results;
 
@@ -687,12 +698,25 @@ if strcmpi(selmode, 'Limits')
     idxAct = find(obj.act);
     
     % Find points within limits
-    idxInLimits = obj.X(idxAct,1) >= min(p.limitsMinMax(1,:))-obj.redPoi(1) & ...
-                  obj.X(idxAct,1) <= max(p.limitsMinMax(1,:))-obj.redPoi(1) & ...
-                  obj.X(idxAct,2) >= min(p.limitsMinMax(2,:))-obj.redPoi(2) & ...
-                  obj.X(idxAct,2) <= max(p.limitsMinMax(2,:))-obj.redPoi(2) & ...
-                  obj.X(idxAct,3) >= min(p.limitsMinMax(3,:))-obj.redPoi(3) & ...
-                  obj.X(idxAct,3) <= max(p.limitsMinMax(3,:))-obj.redPoi(3);
+    if ~p.Reduced % if limits are NOT given in reduced coordinates
+    
+        idxInLimits = obj.X(idxAct,1) >= min(p.limitsMinMax(1,:))-obj.redPoi(1) & ...
+                      obj.X(idxAct,1) <= max(p.limitsMinMax(1,:))-obj.redPoi(1) & ...
+                      obj.X(idxAct,2) >= min(p.limitsMinMax(2,:))-obj.redPoi(2) & ...
+                      obj.X(idxAct,2) <= max(p.limitsMinMax(2,:))-obj.redPoi(2) & ...
+                      obj.X(idxAct,3) >= min(p.limitsMinMax(3,:))-obj.redPoi(3) & ...
+                      obj.X(idxAct,3) <= max(p.limitsMinMax(3,:))-obj.redPoi(3);
+                  
+    else % if limits are given in reduced coordinates
+        
+        idxInLimits = obj.X(idxAct,1) >= min(p.limitsMinMax(1,:)) & ...
+                      obj.X(idxAct,1) <= max(p.limitsMinMax(1,:)) & ...
+                      obj.X(idxAct,2) >= min(p.limitsMinMax(2,:)) & ...
+                      obj.X(idxAct,2) <= max(p.limitsMinMax(2,:)) & ...
+                      obj.X(idxAct,3) >= min(p.limitsMinMax(3,:)) & ...
+                      obj.X(idxAct,3) <= max(p.limitsMinMax(3,:));
+    
+    end
               
 	% Deactivate all points
     obj.act(:) = false;
@@ -750,14 +774,14 @@ if strcmpi(selmode, 'InVoxelHull')
     idxAct = find(obj.act);
     
     % Rangesearch
-    idxInVoxel = obj.rangesearch(p.voxelHull, p.voxelSize/2, 'Distance', 'Chebychev');
+    idxInVoxel = rangesearch(obj.X(idxAct,:), p.voxelHull, p.voxelSize/2, 'Distance', 'Chebychev');
     idxInVoxel = [idxInVoxel{:}];
     
     % Deactivate all points
     obj.act(:) = false;
     
     % Reactivate points which were activated and are within voxel hull
-    obj.act(intersect(idxAct, idxInVoxel)) = true;
+    obj.act(idxAct(idxInVoxel)) = true;
     
 end
 
@@ -768,11 +792,15 @@ if strcmpi(selmode, 'RangeSearch')
     % Input parsing ------------------------------------------------------------
     
     p = inputParser;
-    p.addRequired(  'points'                    , @(x) isnumeric(x) && size(x,2)==3);
-    p.addRequired(  'searchRadius'              , @(x) numel(x)==1 && isnumeric(x) && x>0);
-    p.addParamValue('Distance'    , 'euclidean' , @ischar);
+    p.addRequired( 'points'                      , @(x) isnumeric(x) && size(x,2)==3);
+    p.addRequired( 'searchRadius'                , @(x) numel(x)==1 && isnumeric(x) && x>0);
+    p.addParameter('Distance'       , 'euclidean', @ischar);
+    % Undocumented
+    p.addParameter('MaxPointDensity', Inf        , @(x) isnumeric(x) && x>0);
     p.parse(varargin{:});
     p = p.Results;
+    
+    bucketSize = 1000;
     
     % Filtering ----------------------------------------------------------------
     
@@ -780,14 +808,29 @@ if strcmpi(selmode, 'RangeSearch')
     idxAct = find(obj.act);
     
     % Rangesearch
-    idxInRange = obj.rangesearch(p.points, p.searchRadius, 'Distance', p.Distance);
+    idxInRange = rangesearch(obj.X(idxAct,:), p.points, p.searchRadius, 'Distance', p.Distance, 'BucketSize', bucketSize);
+    
+    % Consider maximum point density within each 'island'
+    if ~isinf(p.MaxPointDensity)
+        areaIsland = p.searchRadius^2*pi;
+        maxNoPointsPerIsland = ceil(p.MaxPointDensity * areaIsland);
+        for i = 1:numel(idxInRange)
+            noPointsInIsland = numel(idxInRange{i});
+            if noPointsInIsland > maxNoPointsPerIsland
+                idxRandom = randperm(noPointsInIsland, maxNoPointsPerIsland);
+                idxInRange{i} = idxInRange{i}(idxRandom);
+            end
+        end
+    end
+    
+    % Merge
     idxInRange = [idxInRange{:}];
     
     % Deactivate all points
     obj.act(:) = false;
     
     % Reactivate points which were activated and are within voxel hull
-    obj.act(intersect(idxAct, idxInRange)) = true;
+    obj.act(idxAct(idxInRange)) = true;
     
 end
 
@@ -798,28 +841,27 @@ if strcmpi(selmode, 'KnnSearch')
     % Input parsing ------------------------------------------------------------
     
     p = inputParser;
-    p.addRequired(  'points'                , @(x) isnumeric(x) && size(x,2)==3);
-    p.addParamValue('K'       , 1           , @(x) numel(x)==1 && isnumeric(x) && x>0);
-    p.addParamValue('Distance', 'euclidean' , @ischar);
+    p.addRequired( 'points'                , @(x) isnumeric(x) && size(x,2)==3);
+    p.addParameter('K'       , 1           , @(x) numel(x)==1 && isnumeric(x) && x>0);
+    p.addParameter('Distance', 'euclidean' , @ischar);
     p.parse(varargin{:});
     p = p.Results;
+    
+    bucketSize = 1000;
     
     % Filtering ----------------------------------------------------------------
     
     % Indices of all originally activated points
     idxAct = find(obj.act);
     
-    % Knn search
-    if all(obj.act)
-        idxKnn = obj.knnsearch(p.points, 'K', p.K, 'Distance', p.Distance);
-        obj.act(:) = false; % deactivate all points
-        obj.act(idxKnn(:)) = true; % reactivate only nn
+    if nargout == 1 % save also distances
+        [idxKnn, varargout{1}] = knnsearch(obj.X(idxAct,:), p.points, 'K', p.K, 'Distance', p.Distance, 'BucketSize', bucketSize);
     else
-        idxKnn = knnsearch(obj.X(idxAct,:), p.points, 'K', p.K, 'Distance', p.Distance);
-        obj.act(:) = false; % deactivate all points
-        obj.act(idxAct(idxKnn)) = true; % reactivate only nn
+                        idxKnn = knnsearch(obj.X(idxAct,:), p.points, 'K', p.K, 'Distance', p.Distance, 'BucketSize', bucketSize);
     end
-    
+    obj.act(:) = false; % deactivate all points
+    obj.act(idxAct(idxKnn)) = true; % reactivate only nn
+
 end
 
 %% 'GeoTiff' -------------------------------------------------------------------
@@ -829,9 +871,9 @@ if strcmpi(selmode, 'GeoTiff')
     % Input parsing ------------------------------------------------------------
     
     p = inputParser;
-    p.addRequired(  'source'         , @(x) iscell(x) || ischar(x));
-    p.addRequired(  'minMax'         , @(x) numel(x)==2 && isnumeric(x));
-    p.addParamValue('RedPoi', [0 0 0], @(x) isnumeric(x) && size(x,1)==1 && size(x,2)==3);
+    p.addRequired( 'source'         , @(x) iscell(x) || ischar(x));
+    p.addRequired( 'minMax'         , @(x) numel(x)==2 && isnumeric(x));
+    p.addParameter('RedPoi', [0 0 0], @(x) isnumeric(x) && size(x,1)==1 && size(x,2)==3);
     p.parse(varargin{:});
     p = p.Results;
     
@@ -879,9 +921,9 @@ if strcmpi(selmode, 'GeoTiff')
     
 end
 
-%% 'CrossSection' --------------------------------------------------------------
+%% 'Profile' -------------------------------------------------------------------
 
-if strcmpi(selmode, 'CrossSection')
+if strcmpi(selmode, 'Profile')
 
     % Input parsing ------------------------------------------------------------
     
@@ -894,10 +936,10 @@ if strcmpi(selmode, 'CrossSection')
     
     % Create polygon -----------------------------------------------------------
     
-    % Delta cross section line
+    % Delta profile line
     dL = [p.lineEnd(1)-p.lineStart(1) p.lineEnd(2)-p.lineStart(2) 0];
       
-    % Delta cross section in polar coordinates (for azimuth)
+    % Delta profile in polar coordinates (for azimuth)
     dLPolar = xyz2polar(dL);
     az = dLPolar(2);
     varargout{1} = az*9/10 + 180; % azimuth in degree!!! (to use with 'view(az, 0)')
@@ -919,13 +961,46 @@ if strcmpi(selmode, 'CrossSection')
     % Deactivate all points
     obj.act(:) = false;
     
-    % Reactivate only points points within polygon
+    % Reactivate only points within polygon
     obj.act(idxAct(idxInPolygon)) = true;
         
     % 4Debug -------------------------------------------------------------------
     
     % plot([p.lineStart(1); p.lineEnd(1)], [p.lineStart(2); p.lineEnd(2)], 'rx'); axis equal; hold on;
     % plot(polygon(:,1), polygon(:,2), 'b.-');
+    
+end
+
+%% 'ByIDs' ---------------------------------------------------------------------
+
+if strcmpi(selmode, 'ByIDs')
+
+    % Input parsing ------------------------------------------------------------
+    
+    p = inputParser;
+    p.addRequired('IDs2select', @isnumeric);
+    p.parse(varargin{:});
+    p = p.Results;
+    
+    % Check if attribute 'id' is present
+    attributes = fieldnames(obj.A);
+    if ~any(strcmp(attributes, 'id'))
+        error('Attribute ''id'' required for selection mode ''ByIDs''!');
+    end
+    
+    % Select points by IDs -----------------------------------------------------
+    
+    % Indices of all originally activated points
+    idxAct = find(obj.act);
+    
+    % Find IDs
+    [~, idxByIDs] = intersect(obj.A.id(idxAct), p.IDs2select);
+    
+    % Deactivate all points
+    obj.act(:) = false;
+    
+    % Reactivate only points selected by ID
+    obj.act(idxAct(idxByIDs)) = true;
     
 end
 

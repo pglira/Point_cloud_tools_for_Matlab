@@ -1,4 +1,4 @@
-function obj = normals(obj, searchRadius, varargin)
+function normals(obj, searchRadius, varargin)
 % NORMALS Compute normal vectors of activated points.
 % ------------------------------------------------------------------------------
 % DESCRIPTION/NOTES
@@ -30,19 +30,20 @@ function obj = normals(obj, searchRadius, varargin)
 % EXAMPLES
 % 1 Compute normals for a subset of points and visualize them.
 %   pc = pointCloud('Lion.xyz');
-%   pc = pc.select('UniformSampling', 3);
-%   pc = pc.normals(1);
+%   pc.select('UniformSampling', 3);
+%   pc.normals(1);
 %   pc.plot('Color', 'r', 'MarkerSize', 5);
-%   pc.plotNormals('Scale', 5);
+%   pc.plotNormals('Color', 'y', 'Scale', 5);
 % ------------------------------------------------------------------------------
-% philipp.glira@geo.tuwien.ac.at
+% philipp.glira@gmail.com
 % ------------------------------------------------------------------------------
 
 % Input parsing ----------------------------------------------------------------
+
 p = inputParser;
-p.addRequired(  'searchRadius'        , @(x) numel(x)==1 && isnumeric(x) && x>0);
-p.addParamValue('MinNoNeighbours',   8, @(x) numel(x)==1 && isnumeric(x) && x>0);
-p.addParamValue('MaxNoNeighbours', Inf, @(x) numel(x)==1 && isnumeric(x) && x>0);
+p.addRequired( 'searchRadius'        , @(x) numel(x)==1 && isnumeric(x) && x>0);
+p.addParameter('MinNoNeighbours',   3, @(x) numel(x)==1 && isnumeric(x) && x>0);
+p.addParameter('MaxNoNeighbours', Inf, @(x) numel(x)==1 && isnumeric(x) && x>0);
 p.parse(searchRadius, varargin{:});
 p = p.Results;
 % Clear required inputs to avoid confusion
@@ -69,7 +70,7 @@ msg('S', {'POINTCLOUD' 'NORMALS' 'NNSEARCH'});
 qp = obj.X(obj.act,:);
 
 % Search of nn
-idxNN = obj.rangesearch(qp, p.searchRadius); % result is cell array
+idxNN = rangesearch(obj.X, qp, p.searchRadius); % result is cell array
 
 msg('E', {'POINTCLOUD' 'NORMALS' 'NNSEARCH'});
 
@@ -123,7 +124,7 @@ msg('V', sum(obj.act)       , 'no. of activated points'        , 'Prec', 0);
 msg('V', sum(~isnan(n(:,1))), 'normal computation   successful', 'Prec', 0);
 msg('V', sum( isnan(n(:,1))), 'normal computation unsuccessful', 'Prec', 0);
 
-obj = obj.correctNormals;
+obj.correctNormals;
 
 msg('E',{'POINTCLOUD' 'NORMALS' 'PCA'});
 

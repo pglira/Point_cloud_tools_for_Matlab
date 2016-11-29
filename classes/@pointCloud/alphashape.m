@@ -32,7 +32,7 @@ function obj = alphashape(obj, r, varargin)
 
 p = inputParser;
 p.addRequired(  'r'        , @(x) isnumeric(x) && x>0);
-p.addParamValue('NthPoi', 1, @(x) isnumeric(x) && x>0);
+p.addParameter('NthPoi', 1, @(x) isnumeric(x) && x>0);
 p.parse(r, varargin{:});
 p = p.Results;
 % Clear required input to avoid confusion

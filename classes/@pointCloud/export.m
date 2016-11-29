@@ -3,8 +3,6 @@ function export(obj, path, varargin)
 % ------------------------------------------------------------------------------
 % DESCRIPTION/NOTES
 % * Only active points are exported.
-% * Files can be written either as plain text files, binary files or shape
-%   files. In binary files all values are saved in double precision.
 % ------------------------------------------------------------------------------
 % INPUT
 % 1 [path]
@@ -14,7 +12,10 @@ function export(obj, path, varargin)
 %     * 'las/laz'  -> las/laz file (only with supported attributes).
 %     * 'bin'      -> binary format containing x, y, z coordinates AND all
 %                     attributes defined with the 'Attributes' parameter.
-%     * 'shp'      -> shape file format containing ONLY x and y coordinates. 
+%     * 'shp'      -> shape file format containing x, y coordinates AND all
+%                     attributes defined with the 'Attributes' parameter
+%                     (Note: the z coordinates of the points can be written as
+%                     shape attribute by using 'z' as attribute name).
 %                     For this feature the 'Mapping Toolbox' is needed.
 %     * 'ply'      -> polygon file format with specified attributes.
 %     * '???'      -> for any other extension (e.g. '.xyz') a plain text file
@@ -58,7 +59,7 @@ function export(obj, path, varargin)
 %                         'PrecCoord'     , 3, ...
 %                         'ColumnWidth'   , 10);
 % ------------------------------------------------------------------------------
-% philipp.glira@geo.tuwien.ac.at
+% philipp.glira@gmail.com
 % ------------------------------------------------------------------------------
 
 % Input parsing ----------------------------------------------------------------
@@ -66,11 +67,11 @@ function export(obj, path, varargin)
 p = inputParser;
 p.addRequired('path');
 % For plain text files and binary files
-p.addParamValue('Attributes'    , {}, @iscell);
+p.addParameter('Attributes'    , [], @(x) iscell(x) || (isnumeric(x) && isempty(x)));
 % For plain text files only
-p.addParamValue('ColumnWidth'   , [], @(x) isscalar(x) || isempty(x));
-p.addParamValue('PrecCoord'     , 4 , @(x) numel(x)==1 || numel(x)==3);
-p.addParamValue('PrecAttributes', 5);
+p.addParameter('ColumnWidth'   , [], @(x) isscalar(x) || isempty(x));
+p.addParameter('PrecCoord'     , 4 , @(x) numel(x)==1 || numel(x)==3);
+p.addParameter('PrecAttributes', 5);
 p.parse(path, varargin{:});
 p = p.Results;
 % Clear required inputs to avoid confusion
@@ -125,7 +126,7 @@ if strcmpi(ext, '.bxyz')
 
 elseif any(strcmpi(ext, {'.las' '.laz'}))
     
-    data   = obj.A;
+    data = obj.A;
     if ~isempty(data)
         attributes = fieldnames(data);
         if any(strcmpi(attributes, 'r')) && any(strcmpi(attributes, 'g')) && any(strcmpi(attributes, 'b'))
@@ -136,6 +137,28 @@ elseif any(strcmpi(ext, {'.las' '.laz'}))
     data.x = XNonRed(:,1);
     data.y = XNonRed(:,2);
     data.z = XNonRed(:,3);
+    
+    % Change OPALS attribute names to LAS attribute names (see http://www.geo.tuwien.ac.at/opals/html/ref_fmt_las.html)
+    lookuptable = {'Amplitude'           'intensity'
+                   'EchoNumber'          'return_number'
+                   'NrOfEchos'           'number_of_returns'
+                   'ClassificationFlags' 'classification_flags'
+                   'ChannelDesc'         'scanner_channel'
+                   'ScanDirection'       'scan_direction_flag'
+                   'EdgeOfFlightLine'    'edge_of_flight_line'
+                   'Classification'      'classification'
+                   'UserData'            'user_data'
+                   'ScanAngle'           'scan_angle_rank'
+                   'PointSourceId'       'point_source_ID'
+                   'GPSTime'             'gps_time'
+                   'InfraRed'            'NIR'}; % echo width missing! is there any correspondence in las format?
+
+   for i = 1:size(lookuptable,1)
+        if isfield(data, lookuptable{i,1})
+            data.(lookuptable{i,2}) = data.(lookuptable{i,1});
+            data = rmfield(data, lookuptable{i,1});
+        end
+    end
 
 %     % If header is already present -> only update
 %     if isfield(obj.U, 'lasHeader')
@@ -179,17 +202,57 @@ elseif any(strcmpi(ext, {'.las' '.laz'}))
 %     mat2las(data, lasHeader, ['-o ' p.path]);
     mat2las(data, ['-o ' p.path]);
 
-% Export to shape file (only points) -------------------------------------------
+% Export to shape file ---------------------------------------------------------
 
 elseif strcmpi(ext, '.shp')
     
-    s = mapshape(XNonRed(:,1), XNonRed(:,2), 'Geometry', 'point');
+    % Export ONLY x and y
+    if isempty(p.Attributes) && iscell(p.Attributes) % i.e. p.Attributes == {}
+    
+        s = mapshape(XNonRed(:,1), XNonRed(:,2), 'Geometry', 'point');
+        
+    % Export x, y, and ALL attributes
+    elseif isempty(p.Attributes) && ~iscell(p.Attributes) % i.e. p.Attributes == []
+       
+        % Create attribute structure
+        att.z = XNonRed(:,3)';
+        if ~isempty(obj.A)
+            attributeNames = fields(obj.A);
+            for i = 1:numel(attributeNames)
+                att.(attributeNames{i}) = obj.A.(attributeNames{i})(obj.act)';
+            end
+        end
+        
+        s = mappoint(XNonRed(:,1)', XNonRed(:,2)', att);
+        
+    % Export x, y, and SELECTED attributes
+    else
+        
+        % Create attribute structure
+        attributeNames = fields(obj.A);
+        for a = 1:numel(p.Attributes)
+            if strcmpi(p.Attributes{a}, 'z')
+                att.z = XNonRed(:,3)';
+            elseif any(strcmpi(p.Attributes{a}, attributeNames))
+                att.(p.Attributes{a}) = obj.A.(p.Attributes{a})(obj.act)';
+            end
+        end
+        
+        s = mappoint(XNonRed(:,1)', XNonRed(:,2)', att);
+        
+    end
+    
     shapewrite(s, p.path);
-
+        
 % Export to binary file (may include attributes) -------------------------------
 
 elseif strcmpi(ext, '.bin')
     
+    % Export coordinates and ALL attributes
+    if isempty(p.Attributes) && ~iscell(p.Attributes) % i.e. p.Attributes == []
+        p.Attributes = fields(obj.A);
+    end
+        
     % Attributes
     if ~isempty(p.Attributes)
         for a = 1:numel(p.Attributes)
