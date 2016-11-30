@@ -36,16 +36,16 @@ p = p.Results;
 
 % Start ------------------------------------------------------------------------
 
-procHierarchy = {'OLSADJ' 'SOLVE'};
+procHierarchy = {'LSADJ' 'SOLVE'};
 
 msg('S', procHierarchy);
 
 % Preparations -----------------------------------------------------------------
 
 % Assign indices for adjustment
-msg('S', {'OLSADJ' 'SOLVE' 'ASSIGNIDXADJ'});
+msg('S', {'LSADJ' 'SOLVE' 'ASSIGNIDXADJ'});
 obj = obj.assignIdxAdj;
-msg('E', {'OLSADJ' 'SOLVE' 'ASSIGNIDXADJ'});
+msg('E', {'LSADJ' 'SOLVE' 'ASSIGNIDXADJ'});
 
 % Create a copy of con structure (as accessing obj.con is unbelievable slow!!!)
 con = obj.con;
@@ -596,7 +596,7 @@ obj.obs.pFacRWA(~idxCsr) = pFacRWA;
 
 % Stochastic a posteriori ------------------------------------------------------
 
-msg('S', {'OLSADJ' 'SOLVE' 'A POSTERIORI STOCHASTIC'});
+msg('S', {'LSADJ' 'SOLVE' 'A POSTERIORI STOCHASTIC'});
 
 % Sigma0 a posteriori
 sig0_post = sqrt(vPv/r);
@@ -643,7 +643,7 @@ msg('V', std_vWithoutGrossErrors , 'std(v)  (without gross errors)', 'Prec', 7);
 msg('V', mean_vWithoutGrossErrors, 'mean(v) (without gross errors)', 'Prec', 7);
 
 % Report statistics for each observation category
-msg('S', {'OLSADJ' 'SOLVE' 'A POSTERIORI STOCHASTIC' 'OBSERVATION CATEGORIES'});
+msg('S', {'LSADJ' 'SOLVE' 'A POSTERIORI STOCHASTIC' 'OBSERVATION CATEGORIES'});
 for c = 1:numel(obj.obs.category)
     msg('T', sprintf('CATEGORY %d: ''%s''', c, obj.obs.category{c}));
     msg('V', sum(idxCat==c)                                      , 'number of observations'         , 'Prec', 0);
@@ -653,9 +653,9 @@ for c = 1:numel(obj.obs.category)
     msg('V', std( v(idxCat==c & pFacRWA~=p.RWApFacOfGrossErrors)), 'std(v)  (without gross errors)' , 'Prec', 7);
     msg('V', mean(v(idxCat==c & pFacRWA~=p.RWApFacOfGrossErrors)), 'mean(v) (without gross errors)' , 'Prec', 7);
 end
-msg('E', {'OLSADJ' 'SOLVE' 'A POSTERIORI STOCHASTIC' 'OBSERVATION CATEGORIES'});
+msg('E', {'LSADJ' 'SOLVE' 'A POSTERIORI STOCHASTIC' 'OBSERVATION CATEGORIES'});
 
-msg('E', {'OLSADJ' 'SOLVE' 'A POSTERIORI STOCHASTIC'});
+msg('E', {'LSADJ' 'SOLVE' 'A POSTERIORI STOCHASTIC'});
 
 % Save adjustment results to object --------------------------------------------
 

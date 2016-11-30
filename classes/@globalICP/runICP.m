@@ -173,7 +173,7 @@ p.addParameter('StopConditionNormdx'     , -1    , @(x) isnumeric(x) && isscalar
 p.parse(varargin{:});
 p = p.Results; clear varargin
 
-% Default values for adjustments (only to be defined if different from ones in olsAdj.solve)
+% Default values for adjustments (only to be defined if different from ones in lsAdj.solve)
 if isempty(p.AdjOptions)
     p.AdjOptions.Rank = true; % default for ICP
 end

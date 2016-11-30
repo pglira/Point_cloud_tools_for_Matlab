@@ -46,7 +46,7 @@ msg('S', {g.procICP{:} 'MINIMIZATION'}, 'LogLevel', 'basic');
 % Adjustment -------------------------------------------------------------------
 
 % Initialize problem (call constructor method)
-adj = olsAdj;
+adj = lsAdj;
 
 % Similarity transformation ----------------------------------------------------
 

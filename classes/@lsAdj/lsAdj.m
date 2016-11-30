@@ -1,5 +1,5 @@
-classdef olsAdj < handle
-% OLSADJ Class for ordinary least squares adjustments.
+classdef lsAdj < handle
+% LSADJ Class for least squares adjustments.
 
     properties
         
@@ -22,7 +22,7 @@ classdef olsAdj < handle
     
     methods
         
-        function obj = olsAdj
+        function obj = lsAdj
     
             % Initialization of table for parameters
             % obj.prm = table(                  []  , []    , []   , logical([]), []      , []          , []          , []            , [], ...
