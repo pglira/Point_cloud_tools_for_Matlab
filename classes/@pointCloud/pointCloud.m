@@ -105,6 +105,7 @@ classdef pointCloud < handle
         %   Name of attributes contained in input data defined as 1-by-a cell,
         %   where a denotes the number of attributes. Predefined attribute names
         %   to use for extended functionality:
+        %     * 'id'        = point id
         %     * 'nx'        = normal x component
         %     * 'ny'        = normal x component
         %     * 'nz'        = normal z component
