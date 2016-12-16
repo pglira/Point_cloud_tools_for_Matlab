@@ -305,7 +305,9 @@ if strcmpi(Flag, 'D')
     clear out
     
     % Separation line
-    out{1,1} = [prefix repmat('-', 1, 80)];
+    lengthSeparationLine = sum(p.TabularData.ColumnWidths) + sum(p.TabularData.ColumnRightMargins);
+    if lengthSeparationLine < 80, lengthSeparationLine = 80; end
+    out{1,1} = [prefix repmat('-', 1, lengthSeparationLine)];
     
     % Report table caption
     out{2,1} = [prefix p.TabularData.Caption];
@@ -343,7 +345,7 @@ if strcmpi(Flag, 'D')
     end
     
     % Separation line
-    out{end+1,1} = [prefix repmat('-', 1, 80)];
+    out{end+1,1} = [prefix repmat('-', 1, lengthSeparationLine)];
     
 end
 
