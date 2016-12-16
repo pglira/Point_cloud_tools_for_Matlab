@@ -1,4 +1,4 @@
-function [obj, idxCst] = addCst(obj, cst2add)
+function idxCst = addCst(obj, cst2add)
 % ADDCST Add constant(s) to problem
 
 noCst2add = numel(cst2add); % no. of constants to add

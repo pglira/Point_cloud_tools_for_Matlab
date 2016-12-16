@@ -1,4 +1,4 @@
-function [obj, idxObs] = addObs(obj, varargin)
+function idxObs = addObs(obj, varargin)
 % ADDOBS Add observation(s) to problem
 
 % Fields of obs structure

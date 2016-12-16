@@ -1,4 +1,4 @@
-function [obj, idxPrm] = addPrm(obj, varargin)
+function idxPrm = addPrm(obj, varargin)
 % ADDPRM Add parameter(s) to problem
 
 % Fields of prm structure
