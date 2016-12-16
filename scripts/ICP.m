@@ -132,6 +132,15 @@ function varargout = ICP(varargin)
 %     this parameter.
 %
 % ------------------------------------------------------------------------------
+% EXAMPLES
+% 1 Example with demo data
+%   ICP('inFiles'                , 'lionscan*approx.xyz', ...
+%       'UniformSamplingDistance', 2, ...
+%       'PlaneSearchRadius'      , 2, ...
+%       'Plot'                   , 1);
+% 2 Same example with syntax for command line executable (ICP.exe)
+%   ICP -inFiles demodata\lionscan*approx.xyz -UniformSamplingDistance 2 -PlaneSearchRadius 2 -Plot 1
+% ------------------------------------------------------------------------------
 % philipp.glira@gmail.com
 % ------------------------------------------------------------------------------
                 
