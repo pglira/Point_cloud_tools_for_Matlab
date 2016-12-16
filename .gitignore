@@ -28,6 +28,7 @@ external/histo.m
 external/maximize.m
 external/plyread.m
 external/plywrite.m
+external/AutoDiff/
 external/run_exiftool/
 functions/.#msg.m.1.2
 functions/.#msg.m.1.4
@@ -42,6 +43,10 @@ functions/pix4d2img.m
 functions/point2linedistance2d.m
 functions/point2lineprojection2d.m
 functions/stripAdjustment/
+functions/dirgeoref.m
+functions/dirgeorefNew.m
+functions/dirgeorefSegment.m
+functions/point2planedistanceSTR2STR.m
 modified_functions/getrect_2016b_mod.m
 modified_functions/ginput_2016a_mod.m
 modified_functions/rotate3d_2016a_mod.m
