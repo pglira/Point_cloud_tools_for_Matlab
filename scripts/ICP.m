@@ -1,4 +1,4 @@
-function trafoParam = ICP(varargin)
+function varargout = ICP(varargin)
 % ICP Implementation of the Iterative Closest Point (ICP) algorithm.
 % ------------------------------------------------------------------------------
 % DESCRIPTION/NOTES
@@ -176,6 +176,28 @@ function trafoParam = ICP(varargin)
 % opt.TrafoOriginalPointClouds = ;
 % opt.StopConditionNormdx      = ;
 
+% Show only help text? ---------------------------------------------------------
+
+if isempty(varargin)
+    if ~isdeployed
+        help ICP
+    else
+        type ICP_help.txt
+    end
+    return
+end
+
+if numel(varargin) > 0
+    if strcmpi(varargin{1}, '-help')
+        if ~isdeployed
+            help ICP
+        else
+            type ICP_help.txt
+        end
+        return
+    end
+end
+   
 % Input parsing ----------------------------------------------------------------
 
 % If parameters are defined as a structure, convert them to a cell
@@ -320,9 +342,9 @@ end
 % Run ICP ----------------------------------------------------------------------
 
 if isfield(p, 'runICP')
-    icp = icp.runICP(p.runICP);
+    icp.runICP(p.runICP);
 else
-    icp = icp.runICP;
+    icp.runICP;
 end
 
 % Export -----------------------------------------------------------------------
@@ -357,26 +379,32 @@ end
 
 % Save transformation parameters to matrix -------------------------------------
 
-for i = 1:numel(icp.PC)
+if nargout == 1
     
-    trafoParam(i,1)  = icp.D.H{i}(1,1); % a11
-    trafoParam(i,2)  = icp.D.H{i}(1,2); % a12
-    trafoParam(i,3)  = icp.D.H{i}(1,3); % a13
-    
-    trafoParam(i,4)  = icp.D.H{i}(2,1); % a21
-    trafoParam(i,5)  = icp.D.H{i}(2,2); % a22
-    trafoParam(i,6)  = icp.D.H{i}(2,3); % a23
-    
-    trafoParam(i,7)  = icp.D.H{i}(3,1); % a31
-    trafoParam(i,8)  = icp.D.H{i}(3,2); % a32
-    trafoParam(i,9)  = icp.D.H{i}(3,3); % a33
-    
-    trafoParam(i,10) = icp.D.H{i}(1,4); % tx
-    trafoParam(i,11) = icp.D.H{i}(2,4); % ty
-    trafoParam(i,12) = icp.D.H{i}(3,4); % tz
-    
-    trafoParam(i,13) = icp.D.redPoi(1); % redPoi_x
-    trafoParam(i,14) = icp.D.redPoi(2); % redPoi_y
-    trafoParam(i,15) = icp.D.redPoi(3); % redPoi_z
+    for i = 1:numel(icp.PC)
 
+        trafoParam(i,1)  = icp.D.H{i}(1,1); % a11
+        trafoParam(i,2)  = icp.D.H{i}(1,2); % a12
+        trafoParam(i,3)  = icp.D.H{i}(1,3); % a13
+
+        trafoParam(i,4)  = icp.D.H{i}(2,1); % a21
+        trafoParam(i,5)  = icp.D.H{i}(2,2); % a22
+        trafoParam(i,6)  = icp.D.H{i}(2,3); % a23
+
+        trafoParam(i,7)  = icp.D.H{i}(3,1); % a31
+        trafoParam(i,8)  = icp.D.H{i}(3,2); % a32
+        trafoParam(i,9)  = icp.D.H{i}(3,3); % a33
+
+        trafoParam(i,10) = icp.D.H{i}(1,4); % tx
+        trafoParam(i,11) = icp.D.H{i}(2,4); % ty
+        trafoParam(i,12) = icp.D.H{i}(3,4); % tz
+
+        trafoParam(i,13) = icp.D.redPoi(1); % redPoi_x
+        trafoParam(i,14) = icp.D.redPoi(2); % redPoi_y
+        trafoParam(i,15) = icp.D.redPoi(3); % redPoi_z
+
+    end
+    
+    varargout{1} = trafoParam;
+    
 end
