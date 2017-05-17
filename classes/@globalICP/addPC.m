@@ -39,7 +39,7 @@ if ischar(varargin{1}) % if input is a file
         error('File ''%s'' does not exist!', varargin{1});
     end
 else % if input is an array
-    p2mat = fullfile(obj.TempFolder, ['PC_' datestr(now,'yyyymmdd_HHMMSS') '.mat']);
+    p2mat = fullfile(obj.TempFolder, ['PC_' datestr(now,'yyyymmdd_HHMMSS.FFF') '.mat']);
 end    
 msg('I', procHierarchy, sprintf('file = ''%s''', p2mat), 'LogLevel', 'basic');
 
