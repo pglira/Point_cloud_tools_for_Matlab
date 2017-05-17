@@ -8,7 +8,7 @@ if ischar(files), files = {files}; end % convert to cell if only one file was se
 % Import and plot point cloud(s)
 for i = 1:numel(files)
     pc = pointCloud(fullfile(path, files{i}));
-    pc.plotNew;
+    pc.plot;
 end
 
 end
