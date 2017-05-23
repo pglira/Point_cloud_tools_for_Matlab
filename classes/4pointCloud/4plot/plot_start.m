@@ -1,10 +1,13 @@
 function [hFig, idxPC, firstCall] = plot_start
 
 % Get figure handle
-hFig = findobj('type', 'figure', 'Name', 'pointCloud.plot');
-if isempty(hFig),
+hFigOpals  = findobj('type', 'figure', 'Name', 'opalsView');
+hFigPCPlot = findobj('type', 'figure', 'Name', 'pointCloud.plot');
+if ~isempty(hFigOpals) , hFig = hFigOpals;  end % use found opalsView figure
+if ~isempty(hFigPCPlot), hFig = hFigPCPlot; end % use found pointCloud.plot figure
+if isempty(hFigOpals) && isempty(hFigPCPlot) % new figure
     hFig = figure;
-    centerfigureonscreen(hFig);
+    % centerfigureonscreen(hFig);
 end
 
 % Get index of actual PC
