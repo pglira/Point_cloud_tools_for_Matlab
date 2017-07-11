@@ -14,15 +14,17 @@ for i = 1:g.nPC
     allQP = vertcat(g.qpX{idxPairs});
 
     % Select a subset of points based on the query points
-    idxRangeSearch = PC{i}.rangesearch(allQP, p.SubsetRadius);
-    idxRangeSearch = unique(horzcat(idxRangeSearch{:})');
+    PC{i}.select('RangeSearch', allQP, p.SubsetRadius);
+    idx2Keep = find(PC{i}.act);
+    % idxRangeSearch = PC{i}.rangesearch(allQP, p.SubsetRadius);
+    % idxRangeSearch = unique(horzcat(idxRangeSearch{:})');
 
     % Indices of points to keep
-    idx2Keep = intersect(idxRangeSearch, find(PC{i}.act));
+    % idx2Keep = intersect(idxRangeSearch, find(PC{i}.act));
 
     % Remove non active points
-    PC{i}.act(:) = false;
-    PC{i}.act(idx2Keep) = true;
+    % PC{i}.act(:) = false;
+    % PC{i}.act(idx2Keep) = true;
     PC{i}.reconstruct;
 
     % Update query points
