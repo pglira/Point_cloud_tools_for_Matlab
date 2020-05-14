@@ -11,3 +11,17 @@ Currently included are:
 
 Also available on:  
 [![View Point cloud tools for Matlab on File Exchange](https://www.mathworks.com/matlabcentral/images/matlab-file-exchange.svg)](https://de.mathworks.com/matlabcentral/fileexchange/54412-point-cloud-tools-for-matlab)
+
+Cite as:
+```
+@article{glira2015a,
+  title={A Correspondence Framework for ALS Strip Adjustments based on Variants of the ICP Algorithm},
+  author={Glira, Philipp and Pfeifer, Norbert and Briese, Christian and Ressl, Camillo},
+  journal={Photogrammetrie-Fernerkundung-Geoinformation},
+  volume={2015},
+  number={4},
+  pages={275--289},
+  year={2015},
+  publisher={E. Schweizerbart'sche Verlagsbuchhandlung}
+}
+```
