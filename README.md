@@ -1,6 +1,6 @@
 # Point cloud tools for Matlab
 
-> **Note**: If you just want to align 2 point clouds with the ICP algorithm, check out a newer and simpler solution called [simpleICP](https://github.com/pglira/simpleICP) (also available at the [Matlab file exchange](https://de.mathworks.com/matlabcentral/fileexchange/81273-simpleicp)). However, if you want to work and visualize point clouds in Matlab, or you need a more flexible and powerful ICP algorithm to align > 2 point clouds at once, this here might be the right library for you.
+> **Note**: If you just want to align 2 point clouds with the ICP algorithm, check out a newer and simpler solution called [simpleICP](https://github.com/pglira/simpleICP) (also available at the [Matlab File Exchange](https://de.mathworks.com/matlabcentral/fileexchange/81273-simpleicp)). However, if you want to work with point clouds and visualize them, or you need a more flexible and powerful ICP algorithm to align > 2 point clouds at once, this here might be the right solution for you.
 
 ## Documentation
 
