@@ -1,0 +1,15 @@
+# This CITATION.cff file was generated with cffinit.
+# Visit https://bit.ly/cffinit to generate yours today!
+
+cff-version: 1.2.0
+title: "Point cloud tools for Matlab"
+message: "If you use this software, please cite it as below."
+type: software
+authors:
+  - family-names: Glira
+    given-names: Philipp
+    email: philipp.glira@gmail.com
+    affiliation: AIT Austrian Institute of Technology
+    orcid: https://orcid.org/0000-0002-7698-8479
+version: 2.0
+date-released: 2022-06-18
