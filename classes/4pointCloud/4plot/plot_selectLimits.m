@@ -39,18 +39,17 @@ try
         hRotate = rotate3d;
         if strcmpi(hRotate.Enable, 'On'), reactivateRotate3d = true; else reactivateRotate3d = false; end
 
-        % rect = getrect(gca);
-        rect = getrect_2016b_mod(gca);
+        rect = getrect(gca);
 
         Limits = [rect(1) rect(1)+rect(3)
                   rect(2) rect(2)+rect(4)
                   -Inf    Inf];
 
         if reactivateRotate3d, hRotate.Enable  = 'On'; end
-        
+
     % Option 'Zoom out'
     elseif strcmp(eventObj.Source.Label, 'Zoom out')
-        
+
         Limits = [hAxes.XLim(1)-(hAxes.XLim(2)-hAxes.XLim(1))*0.5 hAxes.XLim(2)+(hAxes.XLim(2)-hAxes.XLim(1))*0.5
                   hAxes.YLim(1)-(hAxes.YLim(2)-hAxes.YLim(1))*0.5 hAxes.YLim(2)+(hAxes.YLim(2)-hAxes.YLim(1))*0.5
                   -Inf                                            Inf];
@@ -64,29 +63,29 @@ try
                   -Inf Inf];
 
     end
-    
+
 catch
-    
+
     error('Error selecting ''Limits''!'); return;
-    
+
 end
 
 % Select limits
 for i = 1:numel(idxPC)
-    
+
     if i == 1, logLevelOrig = msg('O', 'GetLogLevel'); end
     msg('O', 'SetLogLevel', 'off');
-    
+
     % Select all? (only if new limits are greater than old limits)
     % if any(strcmp(eventObj.Source.Label, {'Show all' 'Zoom out'}))
         hFig.UserData.PC{idxPC(i)}.select('All');
     % end
-    
+
     % Select limits!
     hFig.UserData.PC{idxPC(i)}.select('Limits', Limits, 'Reduced', true);
-    
+
     msg('O', 'SetLogLevel', logLevelOrig);
-    
+
 end
 
 % Update plot!
