@@ -23,7 +23,9 @@ end
 if firstCall
     jetinv;
     difpal;
-    classpal;
+    if license('test', 'image_toolbox') % call only if image processing toolbox is licensed
+        classpal;
+    end
 end
 
 end
