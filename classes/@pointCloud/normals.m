@@ -95,9 +95,15 @@ for i = 1:size(qp,1)
         C = cov(XNN);
 
         % Solution 1 -> actual preference, as normal vector are primarily upwards
-        [P, lambda] = pcacov(C);
-        n(i,:) = P(:,3)';
-        roughness(i,1) = sqrt(lambda(3)); % third component is smallest eigenvalue
+        try
+            [P, lambda] = pcacov(C);
+            n(i,:) = P(:,3)';
+            roughness(i,1) = sqrt(lambda(3)); % third component is smallest eigenvalue
+        catch ME
+            msg('I', {'POINTCLOUD' 'NORMALS' 'PCA'}, ...
+                sprintf('Normal estimation failed for point %.6f/%.6f/%.6f', ...
+                qp(i,1), qp(i,2), qp(i,3)));
+        end
 
         % Solution 2
         % [V, W]  = eig(C);
