@@ -10,8 +10,7 @@ eng = matlab.engine.start_matlab()
 print("MATLAB engine started")
 
 # Add the path to the repo to MATLAB's search path
-# repository_path = Path("/path/to/Point_cloud_tools_for_Matlab")
-repository_path = Path("/data/repos/Point_cloud_tools_for_Matlab")
+repository_path = Path("/path/to/Point_cloud_tools_for_Matlab")
 eng.addpath(eng.genpath(str(repository_path)))
 
 # Print globalICP help screen for parameter information if needed
