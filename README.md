@@ -4,7 +4,7 @@
 
 ## Documentation
 
-The documentation is hosted here: http://www.geo.tuwien.ac.at/downloads/pg/pctools/pctools.html
+The documentation is hosted here: <http://www.geo.tuwien.ac.at/downloads/pg/pctools/pctools.html>
 
 Currently included are:
 
@@ -18,6 +18,7 @@ Also available on:
 [![View Point cloud tools for Matlab on File Exchange](https://www.mathworks.com/matlabcentral/images/matlab-file-exchange.svg)](https://de.mathworks.com/matlabcentral/fileexchange/54412-point-cloud-tools-for-matlab)
 
 Please cite related papers if you use this code:
+
 ```
 @article{glira2015a,
   title={A Correspondence Framework for ALS Strip Adjustments based on Variants of the ICP Algorithm},
@@ -30,3 +31,7 @@ Please cite related papers if you use this code:
   publisher={E. Schweizerbart'sche Verlagsbuchhandlung}
 }
 ```
+
+## Star History
+
+[![Star History Chart](https://api.star-history.com/svg?repos=pglira/Point_cloud_tools_for_Matlab&type=Date)](https://star-history.com/#pglira/Point_cloud_tools_for_Matlab&Date)
